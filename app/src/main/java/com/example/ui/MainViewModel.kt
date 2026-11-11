@@ -121,6 +121,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun toggleVideoWatchedById(id: String) {
+        viewModelScope.launch {
+            val vid = repo.getVideoById(id)
+            if (vid != null) {
+                repo.setVideoWatched(vid.id, !vid.isWatched)
+            }
+        }
+    }
+
     fun updateVideoLinkedPdf(videoId: String, pdfId: String?) {
         viewModelScope.launch {
             repo.linkVideoPdf(videoId, pdfId)

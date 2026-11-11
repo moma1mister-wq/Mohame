@@ -41,7 +41,7 @@ fun NotificationLogScreen(
     onBack: () -> Unit,
     onClearLogs: () -> Unit
 ) {
-    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm:ss a", Locale("ar")) }
+    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm:ss a", Locale.forLanguageTag("ar")) }
 
     PurpleWaveBackground {
         Column(

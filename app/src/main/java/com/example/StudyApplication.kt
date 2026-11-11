@@ -28,7 +28,10 @@ class StudyApplication : Application() {
         preferencesManager = PreferencesManager(this)
 
         NotificationHelper.createNotificationChannel(this)
-        StudySyncWorker.enqueue(this)
+        try {
+            StudySyncWorker.enqueue(this)
+        } catch (_: Exception) {
+        }
 
         CoroutineScope(Dispatchers.IO).launch {
             repository.ensureDataLoaded()

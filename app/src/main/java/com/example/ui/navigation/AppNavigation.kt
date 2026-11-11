@@ -312,7 +312,7 @@ fun AppNavigation(
                                     )
                                 },
                                 onToggleWatched = {
-                                    // toggle
+                                    viewModel.toggleVideoWatchedById(screen.id)
                                 },
                                 onFinishChapter = { rating ->
                                     val subj = subjects.firstOrNull()

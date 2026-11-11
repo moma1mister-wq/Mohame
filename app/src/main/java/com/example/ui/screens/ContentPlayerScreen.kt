@@ -1,10 +1,15 @@
 package com.example.ui.screens
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.net.Uri
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -26,12 +31,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.RotateRight
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,17 +47,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -78,13 +81,32 @@ fun ContentPlayerScreen(
     onFinishChapter: (rating: Int) -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
+
     var isLoading by remember { mutableStateOf(true) }
-    var zoomScale by remember { mutableFloatStateOf(1f) }
-    var rotationAngle by remember { mutableFloatStateOf(0f) }
+    var hasError by remember { mutableStateOf(false) }
+    var isLandscape by remember { mutableStateOf(false) }
     var showProductivityDialog by remember { mutableStateOf(false) }
+    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
     val previewUrl = "https://drive.google.com/file/d/$contentId/preview"
+    val directViewUrl = "https://drive.google.com/file/d/$contentId/view"
     val downloadUrl = "https://drive.google.com/uc?export=download&id=$contentId&confirm=t"
+
+    // Cleanup WebView and restore portrait orientation when leaving screen
+    DisposableEffect(contentId) {
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            webViewInstance?.apply {
+                stopLoading()
+                loadUrl("about:blank")
+                clearHistory()
+                removeAllViews()
+                destroy()
+            }
+            webViewInstance = null
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -99,7 +121,10 @@ fun ContentPlayerScreen(
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
+                IconButton(onClick = {
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    onBack()
+                }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "رجوع",
@@ -116,19 +141,42 @@ fun ContentPlayerScreen(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Zoom Out
-                IconButton(onClick = { zoomScale = (zoomScale - 0.25f).coerceAtLeast(0.5f) }) {
+                // Native WebView Zoom Out
+                IconButton(onClick = {
+                    webViewInstance?.zoomOut()
+                }) {
                     Icon(Icons.Default.ZoomOut, contentDescription = "تصغير", tint = Color.White)
                 }
 
-                // Zoom In
-                IconButton(onClick = { zoomScale = (zoomScale + 0.25f).coerceAtMost(3.0f) }) {
+                // Native WebView Zoom In
+                IconButton(onClick = {
+                    webViewInstance?.zoomIn()
+                }) {
                     Icon(Icons.Default.ZoomIn, contentDescription = "تكبير", tint = Color.White)
                 }
 
-                // Rotate
-                IconButton(onClick = { rotationAngle = (rotationAngle + 90f) % 360f }) {
-                    Icon(Icons.Default.RotateRight, contentDescription = "تدوير", tint = Color.White)
+                // Native Screen Rotation Toggle (Landscape / Portrait)
+                IconButton(onClick = {
+                    isLandscape = !isLandscape
+                    activity?.requestedOrientation = if (isLandscape) {
+                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.ScreenRotation,
+                        contentDescription = "تدوير الشاشة",
+                        tint = if (isLandscape) EmeraldGreen else Color.White
+                    )
+                }
+
+                // Open in External Browser / App
+                IconButton(onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(directViewUrl))
+                    context.startActivity(intent)
+                }) {
+                    Icon(Icons.Default.OpenInBrowser, contentDescription = "فتح خارجي", tint = Color.White)
                 }
 
                 // Direct Download Intent
@@ -236,11 +284,14 @@ fun ContentPlayerScreen(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
+                            // Enable hardware acceleration with fallback safety
+                            setLayerType(View.LAYER_TYPE_HARDWARE, null)
                             settings.apply {
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
                                 loadWithOverviewMode = true
                                 useWideViewPort = true
+                                setSupportZoom(true)
                                 builtInZoomControls = true
                                 displayZoomControls = false
                                 cacheMode = WebSettings.LOAD_DEFAULT
@@ -252,15 +303,26 @@ fun ContentPlayerScreen(
                                     super.onPageFinished(view, url)
                                     isLoading = false
                                 }
+
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: WebResourceError?
+                                ) {
+                                    super.onReceivedError(view, request, error)
+                                    // If main frame fails, show retry option
+                                    if (request?.isForMainFrame == true) {
+                                        isLoading = false
+                                        hasError = true
+                                    }
+                                }
                             }
                             webChromeClient = WebChromeClient()
                             loadUrl(previewUrl)
+                            webViewInstance = this
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .scale(zoomScale)
-                        .rotate(rotationAngle)
+                    modifier = Modifier.fillMaxSize()
                 )
 
                 if (isLoading) {
@@ -268,6 +330,48 @@ fun ContentPlayerScreen(
                         color = VioletPrimary,
                         modifier = Modifier.size(48.dp)
                     )
+                }
+
+                if (hasError) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF0F081E).copy(alpha = 0.95f))
+                            .padding(24.dp)
+                    ) {
+                        Text(
+                            text = "تعذر تحميل المعاينة المباشرة",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PurpleButton(onClick = {
+                                hasError = false
+                                isLoading = true
+                                webViewInstance?.reload()
+                            }) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("إعادة المحاولة")
+                            }
+
+                            PurpleButton(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(directViewUrl))
+                                    context.startActivity(intent)
+                                },
+                                isGreen = true
+                            ) {
+                                Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("فتح في المتصفح")
+                            }
+                        }
+                    }
                 }
             }
         }

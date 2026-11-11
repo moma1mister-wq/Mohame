@@ -66,7 +66,7 @@ fun EvaluationsScreen(
     val avgProdText = String.format(Locale.US, "%.1f", averageProductivity ?: 5f)
     val totalHours = String.format(Locale.US, "%.1f", (totalStudyMinutes ?: 0) / 60f)
 
-    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm a", Locale("ar")) }
+    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm a", Locale.forLanguageTag("ar")) }
 
     PurpleWaveBackground {
         LazyColumn(
