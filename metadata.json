@@ -1,0 +1,6 @@
+{
+  "name": "مذاكرتي",
+  "description": "تطبيق متكامل واحترافي لتنظيم المذاكرة، المحاضرات، الكويزات، وجدول المواعيد بنظام تنبيهات دقيق",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#0f172a">
+<title>أكاديمية البرمجة | مكتبة المواد الدراسية</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg2: #111827;
+    --card: #1a2332;
+    --card-hover: #243044;
+    --border: #2d3a4f;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --accent: #06b6d4;
+    --success: #10b981;
+    --pdf: #f59e0b;
+    --pdf-hover: #d97706;
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Tahoma, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  body.viewer-open { overflow: hidden; }
+
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    position: sticky; top: 0; z-index: 200;
+  }
+  .header-inner {
+    max-width: 1500px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.35rem; }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+  }
+  .search-wrap { flex: 1; max-width: 420px; position: relative; }
+  .search-wrap input {
+    width: 100%; padding: 0.7rem 1rem 0.7rem 2.6rem;
+    border: 1px solid var(--border); border-radius: 50px;
+    background: var(--bg2); color: var(--text); font-size: 0.95rem; outline: none;
+  }
+  .search-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+  .search-wrap::before { content: "🔍"; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); opacity: 0.7; }
+  .stats { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .stat-badge {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 0.4rem 0.9rem; border-radius: 50px; font-size: 0.85rem; color: var(--text-muted);
+  }
+  .stat-badge strong { color: var(--accent); }
+
+  .layout {
+    max-width: 1500px; margin: 0 auto; padding: 1.25rem;
+    display: grid; grid-template-columns: 270px 1fr; gap: 1.25rem;
+  }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static !important; max-height: none; }
+  }
+
+  .sidebar {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1rem; height: fit-content; position: sticky; top: 90px;
+    max-height: calc(100vh - 110px); overflow-y: auto;
+  }
+  .sidebar h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.75rem; padding: 0 0.4rem; }
+  .sem-group { margin-bottom: 1.1rem; }
+  .sem-title { font-weight: 600; font-size: 0.95rem; padding: 0.5rem 0.6rem; color: var(--accent); display: flex; align-items: center; gap: 0.4rem; }
+  .subj-btn {
+    display: flex; align-items: center; gap: 0.55rem; width: 100%;
+    padding: 0.65rem 0.75rem; margin: 0.2rem 0; border: none; background: transparent;
+    border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--text); text-align: right; transition: all 0.2s;
+  }
+  .subj-btn:hover { background: var(--card-hover); }
+  .subj-btn.active {
+    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(6,182,212,0.15));
+    border: 1px solid rgba(59,130,246,0.4); color: #fff;
+  }
+  .subj-btn .counts { margin-right: auto; font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 0.35rem; }
+  .subj-btn.active .counts { color: var(--accent); }
+  .badge-v { background: rgba(59,130,246,0.2); color: #60a5fa; padding: 0.1rem 0.4rem; border-radius: 6px; }
+  .badge-p { background: rgba(245,158,11,0.2); color: #fbbf24; padding: 0.1rem 0.4rem; border-radius: 6px; }
+
+  .main { display: flex; flex-direction: column; gap: 1.25rem; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .panel-header {
+    display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.1rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
+  }
+  .panel-header h2 { font-size: 1.2rem; font-weight: 600; }
+  .panel-header .meta { margin-right: auto; font-size: 0.85rem; color: var(--text-muted); }
+
+  .tabs { display: flex; gap: 0.4rem; margin-bottom: 1.1rem; background: var(--bg2); padding: 0.3rem; border-radius: 10px; width: fit-content; }
+  .tab-btn {
+    padding: 0.5rem 1.1rem; border: none; background: transparent; color: var(--text-muted);
+    border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--primary); color: #fff; }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 0.9rem; }
+  .item-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem; transition: all 0.22s; display: flex; flex-direction: column; gap: 0.65rem;
+  }
+  .item-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.12); }
+  .item-num { font-size: 0.75rem; color: var(--primary); font-weight: 600; }
+  .item-title { font-size: 0.92rem; font-weight: 500; line-height: 1.45; flex: 1; cursor: pointer; }
+  .item-title:hover { color: var(--accent); }
+  .item-actions { display: flex; gap: 0.4rem; }
+  .item-actions .btn { flex: 1; justify-content: center; padding: 0.5rem 0.6rem; font-size: 0.82rem; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.9rem;
+    border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    text-decoration: none; color: #fff; transition: all 0.2s;
+  }
+  .btn-watch { background: var(--primary); }
+  .btn-watch:hover { background: var(--primary-hover); }
+  .btn-dl { background: var(--success); }
+  .btn-dl:hover { background: #059669; }
+  .btn-pdf { background: var(--pdf); }
+  .btn-pdf:hover { background: var(--pdf-hover); }
+
+  .empty { text-align: center; padding: 2.5rem; color: var(--text-muted); }
+  .empty span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+  footer { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+
+  #viewer {
+    position: fixed; inset: 0; z-index: 1000;
+    background: #000;
+    display: none; flex-direction: column;
+  }
+  #viewer.open { display: flex; }
+
+  .viewer-toolbar {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    padding: 0.6rem 0.9rem;
+    background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .viewer-toolbar .title {
+    flex: 1; min-width: 120px;
+    font-size: 0.9rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: #fff;
+  }
+  .viewer-toolbar .btn-group { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .vbtn {
+    width: 40px; height: 40px; border: none; border-radius: 10px;
+    background: rgba(255,255,255,0.1); color: #fff; font-size: 1.05rem;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .vbtn:hover { background: rgba(255,255,255,0.2); }
+  .vbtn:active { transform: scale(0.95); }
+  .vbtn.primary { background: var(--primary); }
+  .vbtn.primary:hover { background: var(--primary-hover); }
+  .vbtn.success { background: var(--success); }
+  .vbtn.danger { background: #ef4444; }
+  .zoom-label {
+    min-width: 52px; text-align: center; font-size: 0.8rem; color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .viewer-stage {
+    flex: 1; position: relative; overflow: hidden;
+    background: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .viewer-content {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+  }
+  .viewer-content iframe {
+    width: 100%; height: 100%; border: none;
+    background: #111;
+  }
+
+  .viewer-content.rotated-90 {
+    width: 100vh; height: 100vw;
+  }
+  .viewer-content.rotated-180 {}
+  .viewer-content.rotated-270 {
+    width: 100vh; height: 100vw;
+  }
+
+  .viewer-hint {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); color: #ccc; font-size: 0.78rem;
+    padding: 0.4rem 0.9rem; border-radius: 20px; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .viewer-hint.show { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .viewer-toolbar .title { font-size: 0.8rem; }
+    .vbtn { width: 36px; height: 36px; font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>أكاديمية البرمجة</div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="ابحث في الفيديوهات والملفات..." oninput="filterItems()">
+    </div>
+    <div class="stats">
+      <div class="stat-badge"><strong>353</strong> فيديو</div>
+      <div class="stat-badge"><strong>174</strong> ملف PDF</div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="panel" id="contentPanel">
+      <div class="panel-header">
+        <span id="subjIcon" style="font-size:1.4rem">💻</span>
+        <h2 id="subjTitle">اختر مادة من القائمة</h2>
+        <div class="meta" id="subjMeta"></div>
+      </div>
+      <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="videos" onclick="switchTab('videos')">🎬 الفيديوهات</button>
+        <button class="tab-btn" data-tab="pdfs" onclick="switchTab('pdfs')">📄 ملفات PDF</button>
+      </div>
+      <div id="itemsGrid" class="items-grid"></div>
+    </div>
+  </main>
+</div>
+
+<footer>جميع الملفات من جوجل درايف فقط • مشاهدة داخل الموقع • تحميل مباشر</footer>
+
+<div id="viewer">
+  <div class="viewer-toolbar">
+    <button class="vbtn danger" onclick="closeViewer()" title="إغلاق">✕</button>
+    <div class="title" id="viewerTitle">العرض</div>
+    <div class="btn-group">
+      <button class="vbtn" onclick="zoomOut()" title="تصغير">➖</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="vbtn" onclick="zoomIn()" title="تكبير">➕</button>
+      <button class="vbtn" onclick="zoomReset()" title="الحجم الأصلي">⟲</button>
+      <button class="vbtn" onclick="rotateScreen()" title="تدوير الشاشة">🔄</button>
+      <button class="vbtn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
+      <button id="viewerDl" class="vbtn success" title="تحميل" type="button">⬇️</button>
+    </div>
+  </div>
+  <div class="viewer-stage" id="viewerStage">
+    <div class="viewer-content" id="viewerContent">
+      <iframe id="viewerFrame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
+    <div class="viewer-hint" id="viewerHint">استخدم الأزرار للتكبير والتدوير</div>
+  </div>
+</div>
+
+<script>
+const DATA = {"sem1": {"title": "الترم الأول", "icon": "1️⃣", "subjects": {"Computing fundamental": {"title": "أساسيات الحاسب", "icon": "💻", "videos": [{"id": "1altKpqotPLPR6s9bV4GBH7yGyKzpbPAi", "title": "01 Introduction to the World of Computers P1 3"}, {"id": "1tbLBuGoaBfGZb66cvmc7z-Iab8ISETiu", "title": "01 Introduction to the World of Computers P2 3"}, {"id": "19LiQpIppN5QCknxvVMsYrpOD06_CAQqS", "title": "01 Introduction to the World of Computers P3 3"}, {"id": "1lYvL7yP8FwmykLYF02wDzIsC56o5woTi", "title": "02 The System Unit Processing and Memory P2 3"}, {"id": "18vZ-YXYk8e5XxT2vB5mR_adQVimP1mJL", "title": "02 The System Unit Processing and Memory P1 3"}, {"id": "1HuGt9X4Uh9jlou5vOnmdCBXO9wF8a2zH", "title": "02 The System Unit Processing and Memory P3 3"}, {"id": "1GJXgIVr1N7CIX3lpiFe_Os_hn6QtfqQP", "title": "03 Storage P1 3"}, {"id": "1ceLtJW-ubQdljSTuXrvWhnqQQn-yaEPH", "title": "03 Storage P2 3"}, {"id": "17Flj8qskjeXFrGjgdmLYR5MOnyyGVvwD", "title": "03 Storage P3 3"}, {"id": "1xJP0UpQrbB1oiYgNriwnVKkWAOXNTVzg", "title": "03 Storage Version2 P1 3"}, {"id": "14UfIDWHMviRKwo4ryR8NLE01AY32p-NJ", "title": "03 Storage Version2 P2 3"}, {"id": "1DT2kXXvWmwzc4AJ0GRkAZBNy5zzFP9h0", "title": "03 Storage Version2 P3 3"}, {"id": "1wRW9BsUjEYj-EUvGiQj3Jou5nmlFLD-M", "title": "04 Input and Output P1 2"}, {"id": "1x2T9v2A85EsGncn92bd7Dj_AmzxmE7vx", "title": "04 Input and Output P2 2"}, {"id": "1vA9a9FLhmb44rYq4v317WmUx7TEM9uFJ", "title": "05 System Software Operating Systems and Utility Programs P1 2"}, {"id": "1MqkqKgKfIg98A9cRwF_YapTl1dL8Wt3z", "title": "05 System Software Operating Systems and Utility Programs P2 2"}, {"id": "1VBAdzUJLJ0_leVAl3aBg2_xb4Cz9IP1_", "title": "07 Computer Networks P1 3"}, {"id": "1o8sZYXqD23qHLLRGc_jlCV2kr8ZSeXbf", "title": "07 Computer Networks P2 3"}, {"id": "1WIFSz_yP-lOggPsSwDj4ZWuW3ohq-M4D", "title": "07 Computer Networks P3 3"}, {"id": "1eZ1OZCxjWQAHlXYmVWprjmnUQsJ66c1_", "title": "08 The Internet and the World Wide Web P1 3"}, {"id": "1WqADk_Xpmqi6OMfiLSrr2CuE0Tay201f", "title": "08 The Internet and the World Wide Web P2 3"}, {"id": "1HQo_O58QrJRkOPMRcQc1WTXHWSCnXSK2", "title": "08 The Internet and the World Wide Web P3 3"}, {"id": "1lDQXXfsO_cVzabth-se_mLsyi4hoR5aX", "title": "12 Information Systems and System Development P1 3"}, {"id": "192sFhv88izbxLZfbT278tIdQBD3kaVn5", "title": "12 Information Systems and System Development P2 3"}, {"id": "1dehqSP6aRC-BRdaippUBZ92OJqFbGBai", "title": "12 Information Systems and System Development P3 3"}, {"id": "14YCMjxzxPB7jIMvlzcqnww5gNPLr-snc", "title": "13 Program Development and Programming Languages P1 3"}, {"id": "1GNvAT5kOYVXV4Fg2NtjcieHOMx0cYdYD", "title": "13 Program Development and Programming Languages P2 3"}, {"id": "1fOU5nhhaba-6t3fIs_Wp92-L5GjaEPck", "title": "13 Program Development and Programming Languages P3 3"}], "pdfs": [{"id": "1hUdlGyHAChjJEr6b9jqHH9OxHgW0bsy3", "title": "00-Algorithms and Flowcharts (1)"}, {"id": "1kQKanFLZVsx2z4uzkFdu3q00C87O0ji1", "title": "00-Algorithms and Flowcharts Intro Added"}, {"id": "1R8OBHQUQpFxhcj0QaaRfk0zjyk8jaJIQ", "title": "UC13.Chapter.01 1st lecture"}, {"id": "1ucQZmLHW5mIb3Km1xFdoKJujPOB1X3--", "title": "UC13.Chapter.01 1st lecture 1"}, {"id": "16JBZPVmd-XK_GRi5uYHcQliGQ0ca2IKm", "title": "UC13.Chapter.01 1st lecture 1762610894348-عربى"}, {"id": "1rfJ0TPU09DgpiNBLXw1hYTM3WUkFlA1s", "title": "UC13.Chapter.01 1st lecture 2"}, {"id": "1KOVjWtWkIYhcW8u2OV7bdBCcDBCDc5uA", "title": "UC13.Chapter.01 2nd lecture.en.ar (1)"}, {"id": "1V2yZ48op2-gO2mamIv4fB8OeKY4Yi05s", "title": "UC13.Chapter.01 2nd lecture.en.ar"}, {"id": "1d3nRTzRAWoajaGRDjyhRz0eOK-I5KAwm", "title": "UC13.Chapter.01 2nd lecture"}, {"id": "12Bn-6M9BrYqSgBZNpjq5CdiLnaoFjY8F", "title": "UC13.Chapter.01 2nd lecture 1"}, {"id": "1MZdXNN9d75FQfqZPY6UDc-YqtC7FzhFB", "title": "Understanding Computers Today And Tomorrow Comprehensive-Cengage Learning (2016) BY Deborah Morley, Charles S. Parker (1)"}, {"id": "1PdSRKLi8g64WLuZlIiTuW3cWXmHQHWNs", "title": "ch 2 system unit"}]}, "Discrete mathematic": {"title": "الرياضيات المتقطعة", "icon": "📐", "videos": [{"id": "1VvYHIoGXzy61KyYwkJCE4SwSkh4gJhNT", "title": "#2 رياضيات متقطعة Discrete Mathematics chapter 1 part 2"}, {"id": "1ARy6LhnRnTYm1WUF3EHvY0ooHBbuKX99", "title": "#3 رياضيات متقطعة Discrete Mathematics chapter 1 part 3 (1)"}, {"id": "1tPHS8KfdBD8CbWDrCFkD3LPawgTAzrbN", "title": "#3 رياضيات متقطعة Discrete Mathematics chapter 1 part 3"}, {"id": "1f-ALUFkkKfw8DvlBne74kad5EB-GtXpn", "title": "#4 رياضيات متقطعة Discrete Mathematics chapter 1 part 4"}, {"id": "1f75WoDFgDzqsNKETlwPZs-3IgOL_OxfN", "title": "#5 رياضيات متقطعة Discrete Mathematics chapter 1 part 5"}, {"id": "1NRv4ut0mIQZvSx8WrNJFtY_GefTAh8XS", "title": "#6 رياضيات متقطعة Discrete Mathematics chapter 1 part 6"}, {"id": "1HEDoCDxEWgoSvEpfnbZYD6be-JhjfHm-", "title": "#7 رياضيات متقطعة Discrete Mathematics chapter 1 part 7"}, {"id": "1rsB8sbwLZ0gXNx1evKBd0yw_JmY0gJu8", "title": "1 # رياضيات متقطعة Discrete Mathematics chapter 1 part 1"}, {"id": "16euTkGLSVExfySFHmbDUQ6SoaMNFqgqD", "title": "Discrete Mathematics - Ch01 - Part01 الرياضيات المتقطعة - الفصل الأول - الجزء الأول"}, {"id": "1Vq3lLInFXnzAeBzhDle4i0MlSFvmBsYM", "title": "Discrete Mathematics - Ch01 - Part02 الرياضيات المتقطعة - الفصل الأول - الجزء الثاني"}, {"id": "1yDW3lf4YYF4wZPLGLBsah_S3De0-Wt5O", "title": "Discrete Mathematics - Ch01 - Part03 الرياضيات المتقطعة - الفصل الأول - الجزء الثالث"}, {"id": "1vRAYawXoMSjTuFu2-j8I1t4tZrBmMQts", "title": "Discrete Mathematics - Ch01 - Part04 الرياضيات المتقطعة - الفصل الأول - الجزء الرابع"}, {"id": "1FZN8Pd48n-4tsYOJasIS1sVe-j0m9fek", "title": "Discrete Mathematics - Ch01 - Part05 الرياضيات المتقطعة - الفصل الأول - الجزء الخامس"}, {"id": "1y-RCVsM2jf9FhUAbFRZaNidrpjTFQSo6", "title": "Discrete Mathematics - Ch01 - Part06 الرياضيات المتقطعة - الفصل الأول - الجزء السادس"}, {"id": "1C8LkTuSZAOVIGHKOWvBViBJu-WKRO8lL", "title": "Discrete Mathematics - Ch01 - Part07 الرياضيات المتقطعة - الفصل الأول - الجزء السابع"}, {"id": "1v7i8hDghcNSaNkMZNavpbNJ5gD8JOslA", "title": "Discrete Mathematics - Ch01 - Part08 الرياضيات المتقطعة - الفصل الأول - الجزء الثامن"}, {"id": "1aBp9qT6ybZXPBy8Lcf0j_JTd3xIHu3ar", "title": "Discrete Mathematics - Ch01 - Part09 الرياضيات المتقطعة - الفصل الأول - الجزء التاسع"}, {"id": "198QXXEagKA2jPsa2sVxgxflLB396rrmC", "title": "Discrete Mathematics - Ch02 - Part01 الرياضيات المتقطعة - الفصل الثاني - الجزء الأول"}, {"id": "1N4EnqsiMz-UDNUocVofDnrjwCAZk3Zlq", "title": "Discrete Mathematics - Ch02 - Part02 الرياضيات المتقطعة - الفصل الثاني - الجزء الثاني"}, {"id": "1YQOAADrX9T8DDl1p9ogIsVHWNfU4DLKQ", "title": "Discrete Mathematics - Ch02 - Part03 الرياضيات المتقطعة - الفصل الثاني - الجزء الثالث"}, {"id": "1f9qy17tsj32lsJQ13lhO0XfirdDq88ni", "title": "Discrete Mathematics - Ch02 - Part04 الرياضيات المتقطعة - الفصل الثاني - الجزء الرابع"}, {"id": "11AiEcfnn_BVEbm6_pOF0HZ67NiBrwqiM", "title": "Discrete Mathematics - Ch02 - Part05 الرياضيات المتقطعة - الفصل الثاني - الجزء الخامس"}, {"id": "1GVy-qEi_6HKSWOXjPkeTFMmVlq1p9yTy", "title": "Discrete Mathematics - Ch02 - Part06 الرياضيات المتقطعة - الفصل الثاني - الجزء السادس"}, {"id": "1icjnQLvvj0JheeMFY0tN4IhRjl9rpY4Y", "title": "Discrete Mathematics - Ch02 - Part07 الرياضيات المتقطعة - الفصل الثاني - الجزء السابع"}, {"id": "1styoeYaSg9Ntduo7xGDDfMiwTezL0qC3", "title": "Discrete Mathematics - Ch03 - Part01 الرياضيات المتقطعة - الفصل الثالث - الجزء الأول"}, {"id": "1N-pbt-W2CaE2jXAK5txUhFCvX1eX09Yl", "title": "Discrete Mathematics - Ch03 - Part02 الرياضيات المتقطعة - الفصل الثالث - الجزء الثاني"}, {"id": "1fXnYRSg57pGOSNkUbZ71kyVpHND_3nqH", "title": "Discrete Mathematics - Ch03 - Part03 الرياضيات المتقطعة - الفصل الثالث - الجزء الثالث"}, {"id": "1dogQPdSNDwaqtKV3nSbcUbnpd-o4BhTG", "title": "Discrete Mathematics - Ch03 - Part04 الرياضيات المتقطعة - الفصل الثالث - الجزء الرابع"}, {"id": "1E3gjGT-yGRhLNKi-PSPZVppV5kfgqNl3", "title": "Discrete Mathematics - Ch03 - Part05 الرياضيات المتقطعة - الفصل الثالث - الجزء الخامس"}, {"id": "1-ySJu4ab3eYV7jsxuW4LMgBjgfoARkOk", "title": "Discrete Mathematics - Ch03 - Part06 الرياضيات المتقطعة - الفصل الثالث - الجزء السادس"}, {"id": "1J_Dit0MxDdssyiF2erY0QKXvcynFkcPU", "title": "Discrete Mathematics - Ch03 - Part07 الرياضيات المتقطعة - الفصل الثالث - الجزء السابع"}, {"id": "1TrA6RZNLGZ8xlRO20LHgwnG7YWEToPgj", "title": "Discrete Mathematics - Ch03 - Part08 الرياضيات المتقطعة - الفصل الثالث - الجزء الثامن"}, {"id": "1G8L0Bf0SkW04orRsL-E1ipjq7nUmFwN9", "title": "Discrete Mathematics - Ch03 - Part09 الرياضيات المتقطعة - الفصل الثالث - الجزء التاسع"}, {"id": "1CdWwRZmUW4n92s9Y0MaD8l75e1iRMUn5", "title": "Discrete Mathematics - Ch03 – Part10 الرياضيات المتقطعة - الفصل الثالث - الجزء العاشر"}, {"id": "1I-kLQLV8q8gdozWL_0kquyWVbQU7hwuj", "title": "Discrete Mathematics - Ch04 - Part01 الرياضيات المتقطعة - الفصل الرابع - الجزء الأول"}, {"id": "1mUkytQlZ_jpnXVk2gRWgzMqrdv0c2ah3", "title": "Discrete Mathematics - Ch04 - Part02 الرياضيات المتقطعة - الفصل الرابع - الجزء الثاني"}, {"id": "1IZlMuY_x-4Od_F97ncpSTOkE_GzKjbsK", "title": "Discrete Mathematics - Ch04 - Part03 الرياضيات المتقطعة - الفصل الرابع - الجزء الثالث"}, {"id": "10QK6OKY6XXtzBlO6s5rWxaV5jcPDK5yH", "title": "Discrete Mathematics - Ch04 - Part04 الرياضيات المتقطعة - الفصل الرابع - الجزء الرابع"}, {"id": "13ZFtNpk9iXuYvu2zWWQy8vAnpx4ShoQ0", "title": "Discrete Mathematics - Ch04 - Part05 الرياضيات المتقطعة - الفصل الرابع - الجزء الخامس"}, {"id": "194XEE7aFuYPwfkybfhH_OOEmEFTmMJIh", "title": "Discrete Mathematics - Ch05 - Part01 الرياضيات المتقطعة - الفصل الخامس - الجزء الأول"}, {"id": "1pXDkrBayQb-E6MO5fQJrGIljRMjL7-Zo", "title": "Discrete Mathematics - Ch05 - Part02 الرياضيات المتقطعة - الفصل الخامس - الجزء الثاني"}, {"id": "1U3w7awcPJath7l-MtU3NVuCFYximn688", "title": "Discrete Mathematics - Ch05 - Part03 الرياضيات المتقطعة - الفصل الخامس - الجزء الثالث"}, {"id": "1-anxBmaN3kOjwwZKbJ5itnKxtmNyIBCI", "title": "Discrete Mathematics - Ch05 - Part04 الرياضيات المتقطعة - الفصل الخامس - الجزء الرابع"}, {"id": "1BudHt-A0wtqHEV238DZP2KbyUd2QIg-q", "title": "Discrete Mathematics - Ch05 - Part05 الرياضيات المتقطعة - الفصل الخامس - الجزء الخامس"}, {"id": "10IbfxOgfMY5inVo1END-p7cNXMnTG9qJ", "title": "Discrete Mathematics - Ch05 - Part06 الرياضيات المتقطعة - الفصل الخامس - الجزء السادس"}, {"id": "1h4gKfslh1neQkwQZLs2Rh5AFx7llo0Ja", "title": "Discrete Mathematics - Ch05 - Part07 الرياضيات المتقطعة - الفصل الخامس - الجزء السابع"}, {"id": "1usk-mdBDt7PCPLr3vIRlrUHpZh44JZhj", "title": "Discrete Mathematics - Midterm Answer - General - اجابة منتصف الفصل - رياضيات متقطعة"}, {"id": "1RsUSYZuGUpcQotgcQQM5c_-lC4vF4Y3J", "title": "Discrete Mathematics - Midterm Answer - Networks Security - اجابة منتصف الفصل - رياضيات متقطعة"}, {"id": "1K2C5RQRuUvDUg08Ht5atqXmyoLhiH-L8", "title": "Discrete Mathematics – Ch03 – Definition of Big-Oh O الرياضيات المتقطعة - الفصل الثالث – تعريف"}, {"id": "15tabs0Wydtr_y2gdvi2kPLb00K7Otern", "title": "Discrete Mathematics – Ch06 – Part01 الرياضيات المتقطعة - الفصل السادس - الجزء الأول"}, {"id": "15XKfkqrm4vFBfjBltwypddbnAaVq5Y6o", "title": "Discrete Mathematics – Ch06 – Part02 الرياضيات المتقطعة - الفصل السادس - الجزء الثاني"}, {"id": "1olaOe6quRi9Bc0SAH1IXTda1a3f-1_Zz", "title": "Discrete Mathematics – Ch06 – Part03 الرياضيات المتقطعة - الفصل السادس - الجزء الثالث"}, {"id": "1ZqlWhMoRgAyoUp8uLll9iZOS-FhLprx8", "title": "Discrete Mathematics – Ch06 – Part04 الرياضيات المتقطعة - الفصل السادس - الجزء الرابع"}, {"id": "1N1scK10dBxv6zJLSjFyVToPpxMwubBT4", "title": "Discrete Mathematics – Ch06 – Part05 الرياضيات المتقطعة - الفصل السادس - الجزء الخامس"}, {"id": "1zTiWv06hTvuJgBuE8ay61DdxZWaStbsd", "title": "Discrete Mathematics – Ch09 – Part01 الرياضيات المتقطعة - الفصل التاسع - الجزء الأول"}, {"id": "1nXaSyqG32Ta2r4e39Alr4WBj6ZZK_0dB", "title": "Discrete Mathematics – Ch09 – Part02 الرياضيات المتقطعة - الفصل التاسع - الجزء الثاني"}, {"id": "1FTsWRDqnW5WvUPztSirb1Y9BZciHoy1N", "title": "Discrete Mathematics – Ch09 – Part03 الرياضيات المتقطعة - الفصل التاسع - الجزء الثالث"}, {"id": "1HNdrZheCoiudJ73dd_bOjEE7LbM6AIvE", "title": "Discrete Mathematics – Ch09 – Part04 الرياضيات المتقطعة - الفصل التاسع - الجزء الرابع"}, {"id": "1Ex6bQuS5rrXsiBh7Xn9PZciR-J-_xGCR", "title": "Discrete Mathematics – Ch10 - Part06 الرياضيات المتقطعة - الفصل العاشر - الجزء السادس"}, {"id": "1hb5p6BZRiJ_5Ic7osKhSW6WM2B90Z3f2", "title": "Discrete Mathematics – Ch10 - Part07 الرياضيات المتقطعة - الفصل العاشر - الجزء السابع"}, {"id": "1dR8l6EeUIamuWEzcfwA4X9-r3HUG_ZLn", "title": "Discrete Mathematics – Ch10 - Part08 الرياضيات المتقطعة - الفصل العاشر - الجزء الثامن"}, {"id": "1ylY3JDSXp8j0oPp4qpBVtR668upagxnC", "title": "Discrete Mathematics – Ch10 – Graph Isomorphism الرياضيات المتقطعة - الفصل العاشر - تماثل الرسومات"}, {"id": "1iRdQxCjX9-cFDY5pGK7Cc3FK8ESSwnJy", "title": "Discrete Mathematics – Ch10 – Part01 الرياضيات المتقطعة - الفصل العاشر - الجزء الأول"}, {"id": "1z4GR3jnSyJ-pAERfZ6i1XtJpmAgbwqgI", "title": "Discrete Mathematics – Ch10 – Part02 الرياضيات المتقطعة - الفصل العاشر - الجزء الثاني"}, {"id": "1KjUWrE_gN_E46wsTfL5UJlItUROdftrc", "title": "Discrete Mathematics – Ch10 – Part03 الرياضيات المتقطعة - الفصل العاشر - الجزء الثالث"}, {"id": "1787ep0CYyGNnzNEEY5C9Ok0zbA_SrSti", "title": "Discrete Mathematics – Ch10 – Part04 الرياضيات المتقطعة - الفصل العاشر - الجزء الرابع"}, {"id": "1RNqos9KifaVMupXVskAPmgCecaANDLUc", "title": "Discrete Mathematics – Ch10 – Part05 الرياضيات المتقطعة - الفصل العاشر - الجزء الخامس"}, {"id": "1BkxTkp6ee7DgTNPTAcfdfFR63gjJKSEK", "title": "Discrete Mathematics – Insertion Sort Growth of Fun. – (08-12-2020) – الرياضيات المتقطعة - أونلاين"}, {"id": "1xppHEs8EyCJhPHG8nIuVEC-xpNyibKqE", "title": "مراجعة الرياضيات المتقطعة (الجزء الثاني) - فيرست"}, {"id": "1_sXnvLmGkUgqGsOHH5T-0F1OsL2FcDrH", "title": "مراجعة شاملة لمقرر الرياضيات المحددة (الرياضيات المتقطعة)"}], "pdfs": [{"id": "1bsoQxeuoUcbjQM2YIZgf7sKOveKI4LJe", "title": "L-1"}, {"id": "1EM9dKJ1yGK5s90oVkpTPkdsybK1c6vaH", "title": "L-2-1"}, {"id": "1v_M-8CJHqwTTQpvAl5m4ItHccMYr_w5u", "title": "L-2"}, {"id": "1GVAaB-fbHlUcNEOPOGiThyYCJzzEA_Wv", "title": "L3 - Modified"}, {"id": "1BXe5pFWByb_7vumT0HUVPNwLixXjslDL", "title": "L3"}, {"id": "1ZJ911bmNUVMy7-aKqnMPoPqTDXCGtV2U", "title": "L4"}, {"id": "1u-Cce6FoGSbbfFHIeeiZnUNRFlwjBVlZ", "title": "L5"}, {"id": "1swfFn2q2jmKefYEuGkZomH_qGLMuLEkp", "title": "Lecture1NumberSystems"}, {"id": "16e_MGALyOMvKadNYfuvDeTeeSA2q_YkW", "title": "Lecture2NumberSystems"}, {"id": "1zLIhM0m-yhCr8KjgyxmNrpF6SwnM0Upa", "title": "Logic"}, {"id": "1qoEH9aI8fficjL2nHpTadypC70N7uvWS", "title": "Sec2.1-1 en to ar 2025-10-28 04-04-05"}, {"id": "1uxQa1YRArVVQsTB6fBTm7ashidooblBt", "title": "Sec2.1-1 en to ar 2025-10-28 04-04-38"}, {"id": "1FRthLGnYp8p6sKsh8DTTyJMl_mFXdIQS", "title": "Sec2.1-1 en to ar 2025-10-28 04-04-38 1"}, {"id": "1fkgeyOemW_l_sCZ9M3z8LSX6AgvXCfYp", "title": "Sec2.1-1"}, {"id": "1YMXIKcNx5_M6hpgu9O0zE4fqBnmmQay_", "title": "Sec2.1"}, {"id": "13pdc_OU-tYs6fBspQpafafmU9GKDVMR-", "title": "Section4.2"}, {"id": "1A0wKaZ5fAbPbzmPnaHe6mOE_WmWW-mG_", "title": "Solution4.1"}, {"id": "19wrR7_onOImOds30ep1qxgghcTL6XPd6", "title": "The Book"}, {"id": "1TPEECyEEmewTCxaNLIpTJD83GlnS9b0s", "title": "math Ch1.en.ar"}, {"id": "1shA9bh6byohq1vfp-RKLogKX5gKGpV_t", "title": "math Ch1"}, {"id": "12RZh35OfWYC33ig6NHm3ovt0UI0_0S_o", "title": "sample questions Discrete Math"}]}, "physcis": {"title": "الفيزياء", "icon": "⚛️", "videos": [], "pdfs": [{"id": "1-lVN1G56hZtEwEXMDDW6YK9R3Zx0avzF", "title": "ELectricity"}, {"id": "1tigmImke6rK5nx7WyZLlPsPagklAXjEU", "title": "FIRST AIDDD"}, {"id": "17FhkbDxIOJjP2Tv6I1n5MsPpTws1pyq2", "title": "Fields Potential Capacitance"}, {"id": "17LOqzNnLhMUI-YQAqEpGh0jku8bTr8jp", "title": "Final 2021"}, {"id": "1soNqLywILMRYV7tXH56eF2piK7hO6za_", "title": "Gauss Law The Elegant Tool"}, {"id": "1z9-PrIsSps0OEw6-0TugmbymzdKxKnfq", "title": "Gauss’s Law 1"}, {"id": "1fdUFpU1h-CxyVMly0AZ1bEJQWtnRNB91", "title": "Physics101 Exp.01"}, {"id": "1ePMVp1X6WKU50CjGQRgRJlCFprO4PMoc", "title": "Physics101 Exp.01 Coulomb Law"}, {"id": "1wSJWV9fBb40mIq5aZYBnZpQ6La4A4J1D", "title": "Physics101 Exp.02 Ohms Law"}, {"id": "11sqPCfiZK2ZO5MQMHo0v3a_2sztyFc4G", "title": "Physics101 Exp.02 Ohms Law 1"}, {"id": "1Jo2pHqDHK6QjEFJwsmpoX09UsEdBC2nO", "title": "Physics101 Exp.05 Discharging a Capacitor through a High Resistor"}, {"id": "1F1dbB1Rj9-CH-WASt4tJtS40eRxjIJjY", "title": "Physics L04 copy"}, {"id": "1uPbqh4dJdzKNivsvEk4r32ETJMlVaOqa", "title": "Physics Vocabulary English Arabic"}, {"id": "1o5SAjSgbyu8E69svQs2sSPLwym6e9cDU", "title": "Purpose"}, {"id": "1Nh8v6sznKRzmdWdEl-rsuHiz6s0MEJjH", "title": "Serway Physics for Scientists Engineers Modern Physics 9th Ed Serway"}, {"id": "1WdQznmvXH3-FG3brXNxjtRTI6XUURgmW", "title": "metric bridge"}, {"id": "1WDo2Ftu-NQ6G39iLuK19y4DUeIE54F0M", "title": "اسلايد 1"}, {"id": "1YUtV8FhUGanXxbaAMGkrSnHijQtSO6f4", "title": "اسلايد 2"}, {"id": "1LxSXfAFgTc-yKVhi1hi5i9qcnhWcAJ4e", "title": "اسلايد3"}, {"id": "1B_zouY3Tc2bVLFrsCBQE1y8pX9QIXjK7", "title": "المحاضرة 4-8-1"}, {"id": "1j8FHLXhcNXkBW16yR8A-FPXRTXlzN39Y", "title": "المحاضرة 4-8"}, {"id": "1cG6r1yaLvH7cX0ZnaxN5OGitH5WwVB4a", "title": "المحاضرة 4-8 260102 164757 (1)"}, {"id": "1j4GFMYxELtkV1JmUj0SPXr3LK-NIakxP", "title": "المحاضرة الثامنة(1)"}, {"id": "1C3TcbVgyZgSPU_T6X74jpkj36V4XJpcR", "title": "المحاضرة الخامسة"}, {"id": "1F2Y-8Xh74G797CujKaOXPdz3v_nDunxP", "title": "المحاضرة السابعة"}, {"id": "1g7C_DGjkqMJ4yS2in8g-918CU4qVtqYp", "title": "المحاضره الاولى"}, {"id": "1RcPEvEKXQcKpCb4NwijXR5UpIJSlxPuM", "title": "المحاضره الاولى 1"}, {"id": "1ZuGbgkYyxuvFPGeDaftrmp_JcjpsLZvq", "title": "المحاضره الثامنة"}, {"id": "1Q966BlnDd8dZU_C-cTvgYHaJ2BPyi4j6", "title": "المحاضره الثانية"}, {"id": "17ssR9e6Lm0B2nggGr12vXlndS17K6FIe", "title": "المحاضره السادسه-1"}, {"id": "18dzNZY0jIhFgz1Mt14RxU0Lzh7bHoFp5", "title": "المحاضره السادسه"}]}, "Social skills": {"title": "المهارات الاجتماعية", "icon": "🗣️", "videos": [], "pdfs": [{"id": "17hYpuCcaOa-klRgV11BQMiyzZOPOxMd5", "title": "Social Skills"}]}, "You know what c++": {"title": "أساسيات البرمجة C++", "icon": "🖥️", "videos": [{"id": "1QFd_u4cxc1l0mLcWLs6gSA3mIfBc3tyr", "title": "1- Programming with C Introduction"}, {"id": "1CsYt7CJa9GqKkJ-3GKUAOoXUup6k7d-x", "title": "2- Programming with C First code with C cout"}, {"id": "1tQQLh-p8XXHYpzL_YF-YmY_pVaiObpXw", "title": "[Arabic] Fundamentals Of Programming With C 001 - Important Introduction About The Course"}, {"id": "12QgUUvsxn7ddClwxyNAl2vTxFRJDf6E5", "title": "[Arabic] Fundamentals Of Programming With C 002 - Why C Language"}, {"id": "1NpuI80lS5aIngV2qR0kKLbItkko-U5pI", "title": "[Arabic] Fundamentals Of Programming With C 003 - Install VSC Editor Compiler And Debugger"}, {"id": "1lClPoYWQecTonjr9-c4nzosR4H6tNgUv", "title": "[Arabic] Fundamentals Of Programming With C 004 - Install Visual Studio And Answer Questions"}, {"id": "1ncxmLwJcxwvrUs-UWA37I_3tucWJUL2c", "title": "[Arabic] Fundamentals Of Programming With C 005 - How The C Works"}, {"id": "13wnff8lHkHpSwsuvT9BbXwrL07sXh9ky", "title": "[Arabic] Fundamentals Of Programming With C 006 - Preprocessing Compiling And Linking"}, {"id": "1bSgiRz6UmabNO7fBEIqGs_6RtUKbaUk2", "title": "[Arabic] Fundamentals Of Programming With C 007 - C Language Syntax"}, {"id": "1xgtxntFKGJAUgNa09E2pSqUEOCzaCz27", "title": "[Arabic] Fundamentals Of Programming With C 008 - Comments And Use Cases"}, {"id": "1YsNGsjcBgSoKPVAyt0M7oHODfGo6x0M6", "title": "[Arabic] Fundamentals Of Programming With C 009 - Variables Basic Knowledge"}, {"id": "1vjVKrcls7M3lw4m4OEWLuFYNIkWYeMRX", "title": "[Arabic] Fundamentals Of Programming With C 010 - Variables Naming Rules And Best Practices"}, {"id": "1YjBKG9Yl3JRJtz53VoVbP8S4hcqUlt0d", "title": "[Arabic] Fundamentals Of Programming With C 011 - Variables Advanced Knowledge"}, {"id": "18O3w9hei93g_TpWFLdGhXFArt4ayXzP2", "title": "[Arabic] Fundamentals Of Programming With C 012 - Variables Scope"}, {"id": "18_-CkF0aUpBay3rp4wsKPDq2HdkH_IME", "title": "[Arabic] Fundamentals Of Programming With C 013 - Variables - Constant Variable"}, {"id": "1-2IjenHK1MtW7NdgeQkHiWRpzMZNPWL7", "title": "[Arabic] Fundamentals Of Programming With C 014 - Calculate Your Age Application"}, {"id": "1xIaUffjZ-2lMe20oZviFAPoeZyh08FKZ", "title": "[Arabic] Fundamentals Of Programming With C 015 - Escape Sequences Characters"}, {"id": "1bp5XaORiyiZI3LXzH_5CYF3N6f5_X56X", "title": "[Arabic] Fundamentals Of Programming With C 016 - Data Types - What Is Data"}, {"id": "1mkLGg_8wmVZjGQ__XoKGoOXcFHrYZW2u", "title": "[Arabic] Fundamentals Of Programming With C 017 - Data Types Sizes And Memory"}, {"id": "1fKE_Umw5nRhPTDnTTeW4TgWM-4aC3n5h", "title": "[Arabic] Fundamentals Of Programming With C 018 - Data Types - Integer"}, {"id": "1CImseNZmq0HAgbhcGW8pBkFV8m_u5VfH", "title": "[Arabic] Fundamentals Of Programming With C 019 - Data Types - Float And Double"}, {"id": "1zT1e89DFkR3ZPfTg-H-Wa-_u1pSIVCSr", "title": "[Arabic] Fundamentals Of Programming With C 020 - Data Types - Char And ASCII"}, {"id": "1uVdDw6J1dNOm8YrVKwFCBcLZIx0CH0EJ", "title": "[Arabic] Fundamentals Of Programming With C 021 - Data Types - Bool And Void"}, {"id": "1y-lD3dhBx2xvYFihAGWYTjJAu1C0kKp3", "title": "[Arabic] Fundamentals Of Programming With C 022 - Data Types - Modifiers And Type Alias"}, {"id": "1WYbVcNYtHLGE5SyqvMbDLRcXBx7BuCO2", "title": "[Arabic] Fundamentals Of Programming With C 023 - Data Types - Type Conversion"}, {"id": "1AFdzo53BDHck0ayyoVnczB4e5VLei9rt", "title": "[Arabic] Fundamentals Of Programming With C 024 - Operators - Arithmetic Operators"}, {"id": "1fknooxqo8satpn-cJUMEjUnI-1JAIruc", "title": "[Arabic] Fundamentals Of Programming With C 025 - Operators - Assignment Operators"}, {"id": "1NcigG0VFkCzgiueaoeuOflnpc5mczTJS", "title": "[Arabic] Fundamentals Of Programming With C 026 - Operators - Increment And Decrement Operators"}, {"id": "1M_jWwoMXE9emmgN-bjTZgZ07ovC2pdfi", "title": "[Arabic] Fundamentals Of Programming With C 027 - Operators - Comparison Operators"}, {"id": "1HgieWJiCos_3memw_gPWTGSmCD42BHwO", "title": "[Arabic] Fundamentals Of Programming With C 028 - Operators - Logical Operators"}, {"id": "1aecFN_EXUYXj871HclnXN5NQpagN7ABQ", "title": "[Arabic] Fundamentals Of Programming With C 029 - Operators - Precedence"}, {"id": "1p8NMuDu7ihmXOvP3EGYJ5d87Cu7jDHJl", "title": "[Arabic] Fundamentals Of Programming With C 030 - Control Flow - If Condition Introduction"}, {"id": "1xGMlAznxx4ukJc6bGRhcg4qsoNXEWZRE", "title": "[Arabic] Fundamentals Of Programming With C 031 - Control Flow - If Else If Else"}, {"id": "1ZAkfB59ojCzv0rPeYJTPl_ILKHtbsO6f", "title": "[Arabic] Fundamentals Of Programming With C 032 - Control Flow - Nested If Conditions"}, {"id": "1CZ7zNwRQrPfnGHNvNk_jy7XtxuyVgR2P", "title": "[Arabic] Fundamentals Of Programming With C 033 - Control Flow - Ternary Conditional Operator"}, {"id": "1qmtEN37E2rYmXNdNW2zY3Ywi-4sNFU23", "title": "[Arabic] Fundamentals Of Programming With C 034 - Control Flow - Nested Ternary Operator"}, {"id": "1KVQQ20-_xxh41S0UALhaTXvakFv3HTO9", "title": "[Arabic] Fundamentals Of Programming With C 035 - Condition Trainings - Create Four Application"}, {"id": "1NAHP-reNsh4-pxytKIfa15T8TY5--yz5", "title": "[Arabic] Fundamentals Of Programming With C 036 - Control Flow - Switch Case"}, {"id": "1aNXigLeN-_Mo6Jp2c3AARKpTyIj94x9t", "title": "[Arabic] Fundamentals Of Programming With C 037 - Switch Training - Create Three Application"}, {"id": "1nFazlpkj-xbDisUzkhYAlw9jwkmutc0K", "title": "[Arabic] Fundamentals Of Programming With C 038 - Array - What Is Array"}, {"id": "1lU6hakt0BjfyxCuQoOj2XuQUY8qcwnQz", "title": "[Arabic] Fundamentals Of Programming With C 039 - Array - Access Elements Memory Location"}, {"id": "1wT-fIieCzR2QAnuIH2yazCac1D8DOpws", "title": "[Arabic] Fundamentals Of Programming With C 040 - Array - Add And Update Elements"}, {"id": "1Nwb36ZDQX04UMSztD-xr539Z7jNHbmz_", "title": "[Arabic] Fundamentals Of Programming With C 041 - Array - Two Dimensional Array"}, {"id": "1z5ltESdB_oU9_3MWHU8M0pt5B7QPg-kJ", "title": "[Arabic] Fundamentals Of Programming With C 042 - Array - Class Array"}, {"id": "10nnQtaigEtbZvrZPPgC7NsV69AjVDO4g", "title": "[Arabic] Fundamentals Of Programming With C 043 - Array - Methods Discussions"}, {"id": "1xGiDRGw69HvogaJkuIyNv_GCs4Ftgn9U", "title": "[Arabic] Fundamentals Of Programming With C 044 - Array Trainings - Guess The Number Game"}, {"id": "1QxtNJEYxqY5bR6n2NbzxCurTtLVyaQIH", "title": "[Arabic] Fundamentals Of Programming With C 045 - String - What Is A String"}, {"id": "1DFTd7Xl8dReI6g_yf0ae5yTyJ0wJ4eoD", "title": "[Arabic] Fundamentals Of Programming With C 046 - String - Concatenating"}, {"id": "1Zxqg6vzBSXwCWBau-Ti3uri33Dsv5_dL", "title": "[Arabic] Fundamentals Of Programming With C 047 - Loop With For"}, {"id": "1EpDHRJ_23dM4XhA8xTTrgxi4PAEdZ94x", "title": "[Arabic] Fundamentals Of Programming With C 048 - Loop With For - Advanced Syntax"}, {"id": "1EEs2Ec7BwFU2hOr4AAt5KkTkcoUTBfBu", "title": "[Arabic] Fundamentals Of Programming With C 049 - Loop With For - Advanced Trainings"}, {"id": "1Ohugl2e5ioYMin32l_eytUEZ3ipb04_3", "title": "[Arabic] Fundamentals Of Programming With C 050 - Loop With For - Nested Loop"}, {"id": "1kzRS6JToMROJ29VYH_g0HOiKNq4rwLzh", "title": "[Arabic] Fundamentals Of Programming With C 051 - Loop With While"}, {"id": "1OB3163S_-fLFxjuGe9QTykgDC_mygPzq", "title": "[Arabic] Fundamentals Of Programming With C 052 - Loop With Do While"}, {"id": "1rO0HHy_u5NCDyV8No4pIAiqbA2oGh8YO", "title": "[Arabic] Fundamentals Of Programming With C 053 - Loop - Break Continue"}, {"id": "1NPX07Jhg98upyuwpw6VK-M5vW6ZXCZWx", "title": "[Arabic] Fundamentals Of Programming With C 054 - Loop Training Create Three Apps"}, {"id": "1lWt8avfp611tYfa82z6zvf4sbuQ7BuTe", "title": "[Arabic] Fundamentals Of Programming With C 055 - Function - Introduction"}, {"id": "1-rdUH3sZ9Maj7eDkfLkbP0humTa8lYL6", "title": "[Arabic] Fundamentals Of Programming With C 056 - Function With Parameter"}, {"id": "1Ev3quEBRgKRtRqG_m24JCOqV5-siTeOP", "title": "[Arabic] Fundamentals Of Programming With C 057 - Function With Parameter Training"}, {"id": "1Bruhehn6DzlTWefj2MQujH2OLLXk_sdj", "title": "[Arabic] Fundamentals Of Programming With C 058 - Function Parameter Default Value"}, {"id": "1K4EoJP6J-va6uCd-NKa2Ytk9mT9vQOa3", "title": "[Arabic] Fundamentals Of Programming With C 059 - Function - Passing Array As Parameter"}, {"id": "19o2nS7559OgbQSn8iUHUkfv76Bj7Gs8R", "title": "[Arabic] Fundamentals Of Programming With C 060 - Function - Return Statement Void"}, {"id": "1NBAHMl2z8UelyYz06L4zEQ6-K9AHnX3P", "title": "[Arabic] Fundamentals Of Programming With C 061 - Function - Forward Declaration"}, {"id": "1JVfTR65UZ_bV2su3979OuPnjliF5F7Ub", "title": "[Arabic] Fundamentals Of Programming With C 062 - Built-In Functions - Math Functions"}, {"id": "1yPnw1-wH_o-9oUzsBTx6pYJd2hUq-KTb", "title": "[Arabic] Fundamentals Of Programming With C 063 - Built-In Functions - Training - Create 2 Apps"}, {"id": "1dQqB9j1-vtSfPrSzN3k6GmIrogGdG-i3", "title": "[Arabic] Fundamentals Of Programming With C 064 - Built-In Functions - Training - Create 3 Apps"}, {"id": "1awn90hUBnWidP26jUaKtWSnNbQOXftNJ", "title": "[Arabic] Fundamentals Of Programming With C 065 - Function Overloading"}, {"id": "1FbjE1CVifV4ffcxXqkO9WtNq5n5OU-lN", "title": "[Arabic] Fundamentals Of Programming With C 066 - Function Recursion"}, {"id": "11kR363tEhGVeQiJcwY2Zuku-k2MdEHOE", "title": "[Arabic] Fundamentals Of Programming With C 067 - Vector - What Is Vector"}, {"id": "12nh6t5BAGfKxUpeqprIFepQwHehf0rUb", "title": "[Arabic] Fundamentals Of Programming With C 068 - Vector Versus Array"}, {"id": "1AZfthFUaOm1duMG7vy9dhVZV3SNSx6VD", "title": "[Arabic] Fundamentals Of Programming With C 069 - Vector - Access Add Update And Delete"}, {"id": "18Xx8gWAcmCJAnJ-zptWjMSbmw8NEpb8G", "title": "[Arabic] Fundamentals Of Programming With C 070 - Vector - Functions"}, {"id": "1Tq2peJ3T2AxfPf-Vn0j29fZzFe3qYfjX", "title": "[Arabic] Fundamentals Of Programming With C 071 - Vector - Iterator And Why To Use"}, {"id": "1HuDi-erljqd-7ryDxT-JKXZm4TjlvpeG", "title": "[Arabic] Fundamentals Of Programming With C 072 - Vector - Traversing With Iterator"}, {"id": "1mssbGdHptzCK1DAoXbMO_s5XhSDs2T9C", "title": "[Arabic] Fundamentals Of Programming With C 073 - Vector - Loop With Iterator And Ranged Loop"}, {"id": "1OMJMfpDOHujRuzZ7gBZ3QL3wR5tYbwKj", "title": "[Arabic] Fundamentals Of Programming With C 074 - Vector - Use Iterator To Count Sort Reverse"}, {"id": "1LYGNE6l4bv95CnZ82v2yug_WVyLKeyot", "title": "[Arabic] Fundamentals Of Programming With C 075 - Pointers - What Are Pointers"}, {"id": "1g-d36saCt5lHEukZzkKz0PCDaBj_L1zK", "title": "[Arabic] Fundamentals Of Programming With C 076 - Pointers - Pointing To Array"}, {"id": "1iFib5Y8dJ5xBZ1lo4HiQibCGl0mNMP-Q", "title": "[Arabic] Fundamentals Of Programming With C 077 - Pointers - Void And Wild Pointer And Null"}, {"id": "1cfA1vg6zqH_5MIk6cvCz9mcmstvqlRUw", "title": "[Arabic] Fundamentals Of Programming With C 078 - Pointers - Arithmetic And Array"}], "pdfs": [{"id": "17C5XmNsi5alfjQzc4Hix_YbI2uNoVAAH", "title": "Lec 8 Struct (1)"}, {"id": "17FCGPR1RCCzwoNY2QvT_UIowwAaRsbGU", "title": "SP LECT01"}, {"id": "1rx0e2ssBMWBXMGCtCuVNHbkenD9r7tXI", "title": "SP LECT01 1"}, {"id": "1E-GMvYpRR0lClrf1vehZa0janBVpd-V3", "title": "SP LECT02"}, {"id": "1MEskVyL_HbRX8NECjD_bStxN2JmKMu_5", "title": "SP LECT03"}, {"id": "144xxOx56MVjGtlDh2BsV1UVHotFyNKzX", "title": "SP LECT04"}, {"id": "1npsyzUCeGY8CfNPIyRabQL_49Ezl9hf2", "title": "SP LECT05-06"}, {"id": "16vyE1XXHqRUjUAd8uSl5Ks_tO7iC_k-4", "title": "SP LECT07-08"}, {"id": "1JKP66RGZFiv0T3xipFUmzgw8JKwb400Z", "title": "SP LECT09-10"}]}, "فقه": {"title": "الفقه", "icon": "📖", "videos": [], "pdfs": [{"id": "1gdsVw8Ha9oLqI8BVyLjvXVnf1G676ti5", "title": "DOC-20251031-WA0023."}]}}}, "sem2": {"title": "الترم الثاني", "icon": "2️⃣", "subjects": {"caclus": {"title": "التفاضل والتكامل", "icon": "∫", "videos": [{"id": "1tLt3r2qDqtDAOz6rnnhasKkkoAMjVlhX", "title": "01–Calculus Math 1 Ch1-1 Introduction Functions تفاضل وتكامل مقدمة الدوال"}, {"id": "1CS3ij-hcsCMZkRu7LHGGIyng-U8XDkFP", "title": "03–Calculus Math 1 Ch1-3 Polynomial Functions تفاضل وتكامل دوال كثيرات الحدود"}, {"id": "17CdSE4gqzCMC5tR86rl9gWqGNNV83ADT", "title": "04–Calculus Math 1 Ch1-4 Some Functions تفاضل وتكامل الدوال المثلثية والأسية واللوغاريتمية"}, {"id": "1RjyLCiZabkKPncj76zr4mOREV92Y6iSZ", "title": "05–Calculus Math 1 Ch2-1 Limits تفاضل وتكامل شرح النهايات"}, {"id": "1K9EkBaQgcdwOY1rTjbeMwOjSTVYsnv3q", "title": "06–Calculus Math 1 Ch3-1 Differentiation of Functions تفاضل وتكامل شرح تفاضل الدوال"}, {"id": "1-IweNzyT2ujRuTVNEMPoPFv9f_q1AZCC", "title": "07–Calculus Math 1 Ch4-1 Application of Differentiation تفاضل وتكامل تطبيقات الاشتقاق"}, {"id": "1ptG04OwHqZcYG3ft_EGeoAimczCZRVsA", "title": "08–Calculus Math 1 Ch5-1 Indefinite Integrals تفاضل وتكامل مقدمة عن التكامل الغير محدود"}, {"id": "1eed-Yk7EAc1PalFkspw9oC074rhQYqHM", "title": "09–Calculus Math 1 Ch6-1 Integration Techniques تفاضل وتكامل تقنيات التكامل"}, {"id": "1srB5z4F_ARf0ge4TrITMIvteXH0zRCpk", "title": "10–Calculus Math 1 Ch7-1 Definite Integral Applications تفاضل وتكامل تطبيق التكامل المحدد"}, {"id": "1jiwauF7Vkk8vmZpG1pqlv_sKa4QuFgYs", "title": "11–Calculus Math 1 Ch7-2 Multiple Integrals Applications تفاضل وتكامل تطبيقات التكامل المتعدد"}], "pdfs": [{"id": "1vz5vn7vCx_GIBujHhPF4r5SEUGWEfmwD", "title": "Applications"}, {"id": "1c5C4-VjP3_r15_S7en58semCJVDAolls", "title": "Calculus-Lec01"}, {"id": "1AlrKfB5O2w_SIoQwKbpx1n4TJoAqamXX", "title": "Calculus-Lec02"}, {"id": "1twsSTFOOU2N5nWyqKUN_K9llHrx-ujzq", "title": "Calculus-Lec03"}, {"id": "1u5XZYzP-kyvbcUSgPTRy0AkbNxrn_mul", "title": "Calculus-Lec04"}, {"id": "1SiPAD_uC2W4SURTNAHrE1H01WMHyoFqR", "title": "Calculus-Lec05"}, {"id": "10SpPbmNopTdy3EP4YkkcBJhrqUdCytrb", "title": "Lecture 1- (Functions)"}, {"id": "122Kjmn9bn_SR2rco1DSsZt6vKqYAHtpu", "title": "Lecture 2- (Limits and Continuity)"}, {"id": "1qIp1dG0UEWvJbdaLqY7zTEMa4ZOIoaOS", "title": "Lecture 3 - (Differentiation)"}, {"id": "1n0FN6fHH6HhCD9O5IA-Sqbj5QoqD13ev", "title": "Lecture 4 - (Integration)"}, {"id": "1ujslvmVql9Jt2raOGxuDEUMTwwkTDnkS", "title": "المحاضرة السابعة Calculus"}, {"id": "1d-lc8pP6hL22XcXD8HFthQWQQ9tfcaAI", "title": "المحاضرة السادسة Calculus"}]}, "Internet technology": {"title": "تكنولوجيا الإنترنت", "icon": "🌐", "videos": [{"id": "1Ixu-txnMYwzmaDub-ADRpQ428C7LaaZI", "title": "ARP Protocol Explanation in Arabic - Address Resolution Protocol"}, {"id": "1S9I2sNymI7jVp6XogYi7OhwbAF_j62yR", "title": "Chapter01 Internet Overview 01"}, {"id": "1RcM1R_2PaL5n-NCYEB0mtTATrFna-DJp", "title": "Chapter03 IPv4 structure subnet mask 04"}, {"id": "1CqLvnwxDQa0fpLGrILrjr1_Te6dMmZHU", "title": "Chapter03 IPv6 DNS 06"}, {"id": "1ODIAr25HMlCKR_NpnGNXMsN97Cj0RMkw", "title": "Chapter03 NAT Private IPs Exmples 05"}, {"id": "1Iu5r67XqllnwvBDTiSmIfQS-p3k-Nkw4", "title": "Chapter03 Overview 01"}, {"id": "1ihsJW98i7AgyLO8vMNm5J_sfa1xvM_Qe", "title": "Chapter03 Transport Layer and TCP 02"}, {"id": "1GGy0Kif_Lo3bXhuctTvK4Atxg1NSzjaI", "title": "Chapter03 UDP Ports Sockets 03"}, {"id": "1LoYJztcUH4JhJD1FV_s17BrDl_AstYiy", "title": "Chapter04 HTTP Evolution 01"}, {"id": "1Um8LJCLg5FWsSXHQV6KjwH68QpCy9iWn", "title": "Chapter04 HTTP Methods and Status codes 02"}, {"id": "1vvolOIqwO9-dhqhH1jnwV_M_4g4MpKon", "title": "Chapter04 HTTP Stateless Rest API and HTTPS TLS 03"}, {"id": "1s6rqv7hCy2B0ZiPfByjlI0ei11ZauVxX", "title": "Chapter04 HTTPS Symmetric HTTPS Asymmetric and Certifications 04"}, {"id": "1zqMzbD8VFtq84d7rAOoXANkzdiwD-Qh2", "title": "Chpater01 Internet Overview 02"}, {"id": "15DDOHMrV5FBZvuk5OQShZIYxSdtHoJhi", "title": "Explanation of the basic network components and cable types"}, {"id": "1hbXLCSPsOb6wAf9O09aVhzq9f7qfE4Ki", "title": "Internet Technology 1 Lecture 8 Java Script"}, {"id": "1DR4oEmYXL0-SyRePeUtua78BvqCOLZaJ", "title": "The difference between WorkGroup and Client Server"}, {"id": "1bKnDzkHi3UTJFDQLBMfFGhVJKmV7JU-u", "title": "Types of casting and the difference between broadcast, multicast, unicast, half-duplex, and full-..."}, {"id": "1f6ki15lF2lAAwYQGMlR-sVg1qQnDNRdE", "title": "internet technology 1 lecture 10 JS events and html DOM"}, {"id": "1X2A2IeKMkxxPCuDfBfdEPXI6OMU68fFR", "title": "internet technology 1 lecture 4 tables Forms and Multimedia"}, {"id": "19zZ1kzHcSy2-Je6XfaC5cI6i0ZF9DdNv", "title": "internet technology 1 lecture 3 html meat tags heading paragraphs images and list"}, {"id": "1wTGcPbuinuzUpqupipxykDm4rNCHQmG9", "title": "internet technology 1 lecture 5 page layout and intro to css"}, {"id": "15J4Z7ztDEGmh6yXn32AxwwRojMIGxMcA", "title": "internet technology 1 lecture 6 css color background border margin and padding"}, {"id": "1LkRVyBKLpQR_X9ViAZVJwj-r29s66YYU", "title": "internet technology 1 lecture 9 js conditional and loop statments functions"}, {"id": "1R9xQa3Z7NXdYCt3PksOgykJEhnF3ZQ84", "title": "iternet technology 1 lecture 7 box model and more"}, {"id": "11J1LgumdqnJns-o_7X7pJUGLInZ3Pn4n", "title": "أساسيات شبكات الحاسوب Fundamentals of Information Technology"}, {"id": "19ruCrV169NmF1Na9PMvjnkdaMzv53zFf", "title": "ازاي تبدأ في مجال الشبكات وال IT في 5 دقائق فقط - Introduction to Networks and CCNA"}, {"id": "1j3fUNaYzhmGwFeIW8IXkW_-AaZ2YCDTA", "title": "تعرف على الـ Number Systems في الكمبيوتر Fundamentals of Information Technology"}, {"id": "1eJxqjxfR0AR9xB_6lxt6PXo0i80xOu-s", "title": "تقنيات الانترنت 1 المحاضره الثانيه مقدمه عن لغة اتش تي ام ال intro to HTML lecture 2"}, {"id": "1CqfXthw-_gK-0vQOODdga4gdS4IuUArr", "title": "تقنيات الانترنت المحاضره 1 الانترنت والويب internet technology lecture 1"}, {"id": "1Ao291Lq5_3Uf6PuJfRREhQu7m-rahCR5", "title": "حل الامتحان التجريبى لمادة تكنولوجيا المعلومات والاتصالات IT ICT"}, {"id": "1hci0U12f3v7ALEuoToNmWnAxDtO8AlzB", "title": "شرح كامل ومبسط لتكنولوجيا المعلومات والاتصالات IT (الجزء الخامس والاخير)(480P)"}, {"id": "1KZ3NS_AXQftzfIRjkbUpWXDxEZ8cStxk", "title": "شرح كامل ومبسط لتكنولوجيا المعلومات والاتصالات IT (الجزء الأول )(480P)"}, {"id": "1t1Y9Zo0vyrgjeJJm_3dSI7RCJaXuuZuG", "title": "شرح كامل ومبسط لتكنولوجيا المعلومات والاتصالات IT (الجزء الثانى)(480P)"}, {"id": "11aUT-v7ACe8xpecgfaYAuc8dIJfvv_sw", "title": "شرح كامل ومبسط لتكنولوجيا المعلومات والاتصالات IT (الجزء الرابع)(480P)"}, {"id": "1l00CvDLWx1dMT6TpGqcnViNRSv3BGnUf", "title": "شرح كامل ومبسط لتكنولوجيا المعلومات والاتصالات it (الجزء الثالث)(480P)"}, {"id": "1BLw-4A2C5EOSYNdvWFQWEYJegT-_vLY_", "title": "شرح أجهزة الشبكات والفرق بين الهاب والسويتش والراوتر - Hub vs Switch vs Router"}, {"id": "1gDw9EfSyF_6i_kYJ6bKs5GOm4NAF4YKm", "title": "شرح أنواع الشبكات LAN, WAN, PAN, CAN, MAN, SAN"}, {"id": "11vszxM6yseQJgVJWqsF5OUL5nzHBCkVf", "title": "شرح ال DHCP بالتفصيل وبالعربي وجرافيك احترافي"}, {"id": "1d-68kr4IPykfQ6SDlmd-sltG1JZY9O2O", "title": "شرح ال NAT وأنواعه بالتفصيل بجرافيك احترافي"}, {"id": "1xxQXQaaJENTBovvjxSqXxZSO9JyoRwrY", "title": "شرح ال Network Topologies بالعربي بطريقة مبسطة Bus - Ring - Mesh - Star"}, {"id": "1hoBXEnoqiZGD972pirHZyJ6uwZL8_Qep", "title": "شرح ال OSI Model وال 7 مراحل شرح مبسط بالعربي في 20 دقيقة فقط"}, {"id": "1NUnU9EU7PhEHpOBzi4m8OvgAV3-D49pl", "title": "شرح الاكسيس بوينت Access point بطريقة مبسطة وجرفيك احترافي"}, {"id": "1oTTYcmda9Ra_FoJC5gtHaSgU8ML94O-3", "title": "شرح الشبكات اللاسلكية Wireless - Wi-Fi والفرق بين 2.4 و 5 GHZ"}, {"id": "1jyUeDEfKfpMkbnBgnTLzzVnemKYDiA_S", "title": "شرح المنافذ و ال Port Number بطريقة مبسطة"}, {"id": "1oxwSfPSmXg7VNGEvGz8Ah_TgDDAzmEBB", "title": "شرح تفصيلي لل VLAN بطريقة مبسطة وجرافيك احترافي"}, {"id": "1DCqYursRlXMv5P1tiakZo6vCh-my5jm9", "title": "شرح تفصيلي للفايروول - Firewall وأنواعه جدار الحماية بجرافيك احترافي"}, {"id": "1FFhbPYuvT0qmXKa4k8EDXlY6bvMmwsHA", "title": "شرح تقنية ال Virtualization وال VM بطريقة مبسطة وجرافيك احترافي"}, {"id": "1BLNxS5SZQTYuF2RsGBQ8VH9GrVNnQED0", "title": "شرح شامل لل DMZ - Demilitarized Zone وطريقة تفعيله في راوتر المنزل"}, {"id": "1NzNd2cuyZrZT0sKzjiAai3XOVctMQV5g", "title": "شرح شامل لل DNS بالعربي - Domain Name system"}, {"id": "12_bqMDNzxZFfLUZao5Ub1EQBom31H-tX", "title": "شرح شامل لل VPN وأنواعه بطريقة مبسطة وجرافيك احترافي"}, {"id": "1LdJJ0AfoKvvh5ieB5bwfmwH6wBivhTiT", "title": "شرح مفصل لل IP Address وال Subnet Mask, الفرق بين Public IP Vs Private IP"}, {"id": "1drC55vr3FUBieJ40wL2s7v9ETTl7ZSsP", "title": "شرح مفصل لل MAC Address و كارت الشبكة NIC بالعربي"}, {"id": "1DQjsL7Odtz0XanvxnGqPILDzICqdwhC3", "title": "كيف تعمل أنظمة التشغيل Fundamentals of Information Technology"}, {"id": "1mcGg_xbhQSyg6oAX47X_EcFDNxHjFoek", "title": "ما هي الـ Virtualization و الـ Containerization؟ Fundamentals of Information Technology"}, {"id": "1HiWJ1oxlhloCEO9fgpAxXnpycYERqHGO", "title": "مقدمة إلى تكنولوجيا المعلومات Fundamentals of Information Technology(480P)"}, {"id": "1lyrvJ3goBmQSiovy8UpBHlTaX7pRSlNH", "title": "مقدمة دورة أساسيات تكنولوجيا المعلومات Fundamentals of Information Technology(480P)"}], "pdfs": [{"id": "1fnpz0FXtpdAk6hji-R0NdlebaUMwCtJ7", "title": "Ans-Meidterm-Exam-students-OS"}, {"id": "123WlUeyJ23icGFNAQWxGuVJi4aAG-ijC", "title": "IT All programs"}, {"id": "11ygLZTVHUMZXGPRYWNxcpnyKWlDaLiAP", "title": "IT All"}, {"id": "1p77ZEBp1yoP0rYsaLVKdFtQjtqukWt3-", "title": "IT-Lec01 (1)"}, {"id": "1LaMBzOZw74TPWPRtcQVZ7xjm3gj1fAJc", "title": "IT-Lec01"}, {"id": "1mEZC0U-dSRsjxWpCXt9SNUvLD6BpkCKM", "title": "IT-Lec02 (1)"}, {"id": "1Ixm1mK-HfHz05r8C8CcUmCCCP_Fyeqx4", "title": "IT-Lec02"}, {"id": "1uqU1I3n5f1uS9dw-mFSboZcycMG5wUbr", "title": "IT-Lec03 (1)"}, {"id": "1eSSIxIG_9Lelveu7SFkIJaXVu04zpovF", "title": "IT-Lec03"}, {"id": "1h2o8D3P0AqSFzyuygVhGlUU2g8qiQrlF", "title": "IT-Lec04"}, {"id": "1yxuqbP1uTtPyuPv_p0RaUcTroVV1hPbc", "title": "IT-Lec05"}, {"id": "1MRdfQM-DGi5JHOLwoU1nHS2HE0oIWsQX", "title": "L 5"}, {"id": "1GxSQWrdxkX3NxpS8fJiW9RYLTTMlnVeA", "title": "L002 (1)"}, {"id": "1rQyzDqO8-3NrJvEo3lC9_bltQ_eNxE9f", "title": "L002"}, {"id": "1fyekIAMqMVVb0LkdywOiM-SeMsBwpwY3", "title": "L4"}, {"id": "1Z6F2oXvigQZte1ILkTRMV7umya8aIEEd", "title": "Lecture06- CSS basics"}, {"id": "13IorT-kqN34z7XKSm-tqS1w_PL8jd4o0", "title": "Lecture 03 Slides"}, {"id": "1QBahySNF26gELTN7-KfSUl2ElGelkmqI", "title": "Questions Based on Chapter 1"}]}, "oop": {"title": "البرمجة كائنية التوجه OOP", "icon": "🧩", "videos": [{"id": "15M_2MO3tsA6HNQjgIjCEERVIBHfz3tDs", "title": "00 [JAVA] - Introduction(480P)"}, {"id": "1sh5841LzZ_tDtHh_exZ2ZiPh9ZQVHxwt", "title": "01 [JAVA] - Installing the Java Development Tools (JDK Apache NetBeans IDE)(480P)"}, {"id": "1QAeCsNH2PHJ-SjdOa3ZRcze4Ed1ye2sn", "title": "010 [JAVA] - Repetition Control Statement (While Loop)(480P)"}, {"id": "1nDYC-NfWRxc1kKX7Z3fuJVh5pX0s20O1", "title": "011 [JAVA] - Sentinel and Flag-Controlled While Loops(480P)"}, {"id": "1JHnzVK_Bz--Ax9wcp_gSwfWOZz3PBUJv", "title": "012 [JAVA] - Repetition Control Statement (Do-While Loop)(480P)"}, {"id": "1wlelF0FpVmVt1_ntXPLdUbppavz7BVRB", "title": "013 [JAVA] - Repetition Control Statement (For Loop)(480P)"}, {"id": "1oQWy_xPZEDdBwiGUiyz5tIr_HY0xM822", "title": "014 [JAVA] - Questions and Exercises in Loops(480P)"}, {"id": "1kBaQtwsqaqPujJehdut3q3PleC_tp-SJ", "title": "015 [JAVA] - Branching Statements ( Break Continue )(480P)"}, {"id": "1F2ds7rVgrBZ8OoS3YhHtuFwYzvWJ_8e_", "title": "016 [JAVA] - Repetition Control Statement (Nested Loops)(480P)"}, {"id": "1A-FIphPqf5Q2NXh2gaOKKEqh2tJNr6Lx", "title": "017 [JAVA] - Branching Statements (Labeled Break Labeled Continue)(480P)"}, {"id": "1lU8zD8VU3Z31F60c_2TwHoqBgldfBLH5", "title": "018 [JAVA] - Method Function Part 1(480P)"}, {"id": "14OyFAGt1olEl7u6jjApAyq0u7OpSEAnT", "title": "019 [JAVA] - Method Function Part 2 (Examples)(480P)"}, {"id": "1TBH3X2lNZb9Sa7njH4rUKvjKE8j-5OjO", "title": "02 [JAVA] - Escape Sequences and Comments(480P)"}, {"id": "11M8V94fdLfayOEM9-7sUYOjnGiTu1Bld", "title": "020 [JAVA] - Built in Method Function(480P)"}, {"id": "1iOUjSucUiZLBJepab8aNB2JXgd3o4A8I", "title": "021 [JAVA] - Overloading Method Function(480P)"}, {"id": "1m-svXo_55B04_PBA-r-OBMlUQ3ZZbtiC", "title": "022 [JAVA] - Recursion Recursive Methods Part 1(480P)"}, {"id": "1cJIbJ5I_GleFYgKEzgdNcFUuXy4Bvbhu", "title": "023 [JAVA] - Recursion Recursive Methods Part 2(480P)"}, {"id": "1JE03NAZAfFmvSBFPtAc3R3-yuAwEUM9o", "title": "024 [JAVA] - One Dimensional Arrays (1D Array)(480P)"}, {"id": "1KU-W7VS2txoPJ1WvQg41OepZdHI1u9ln", "title": "025 [JAVA] - One Dimensional Array (Exercises Practice)(480P)"}, {"id": "1tMwCrmr7g9RcNMqYY5aiAJByw-iLnifQ", "title": "026 [JAVA] - One Dimensional Array (Char Array)(480P)"}, {"id": "1qO5HY8LkSyh-DKY7ZYsd2HmqGFyxudJ8", "title": "027 [JAVA] - Passing Arrays to Methods(480P)"}, {"id": "1LnddYzPQMCIz3aAhhtiEtK-sHbY1PAQi", "title": "028 [JAVA] - Multidimensional Arrays Passing Multidimensional Arrays to Methods(480P)"}, {"id": "1Peoekv6WXwVcqlW0fgrLcd1d5oEOXgZB", "title": "029 [JAVA] - String Array String(480P)"}, {"id": "1J46iOo15O9lZVucQ2svoVymXkRrCyOpd", "title": "03 [JAVA] - Data Types(480P)"}, {"id": "1lB7h_O-QnXBYuyQWyTnKny8a0A-Pfdmo", "title": "030 [JAVA] - Introduction to Object-Oriented Programming(480P)"}, {"id": "144k7vkHK_pPZmkPw0gyowVMMPO3JUDuC", "title": "031 [JAVA] - Classes and Objects(480P)"}, {"id": "1G6kIO05dYfsXn-oij9RyfLqAr9AqAkFP", "title": "032 [JAVA] - Questions and Exercises - Classes and Objects(480P)"}, {"id": "1WdO2n5RApKH4htINSwwkjWgx9eFpdKAx", "title": "033 [JAVA] - Constructor (No-Arg Parameterized Default)(480P)"}, {"id": "15-QSV2KR2ylp5gL4tbGrg11E_nnm7RBA", "title": "034 [JAVA] - Constructor (Copy Constructor) Finalizers vs Destructor(480P)"}, {"id": "1vudfeRFYvkSugGL4SZFeHeetLywGpmTf", "title": "035 [JAVA] - Static keyword (Static Variable and Methods)(480P)"}, {"id": "1-2Q1SPuybpWIXI0YhzbRRH7cq7Mk3neq", "title": "036 [JAVA] - Static keyword (Static Block - Static Class)(480P)"}, {"id": "1GdmG9Ljb9I9M-z0MlmDl23B8HHzFW3pp", "title": "037 [JAVA] - Passing Objects to Methods (by Value vs by Reference Passing Objects as Arguments)(480P)"}, {"id": "1yjdUmzwEn0pci01C-U3GDA5bAUjRhIlx", "title": "038 [JAVA] - Passing Objects to Methods (Returning Objects Comparing Objects)(480P)"}, {"id": "1vquK3xCKGd8LfQAl1k_5XRuSPRkH9haW", "title": "039 [JAVA] - Inheritance (Types of Inheritance Access Modifiers and inheritance)(480P)"}, {"id": "1o6F5YUJVZ4R0Mzpnkc3Qfihde6hcW96x", "title": "04 [JAVA] - Arithmetic Operators(480P)"}, {"id": "1KqlOzxpbf_-21ZN3HIuMX9aVphTpvysA", "title": "040 [JAVA] - Inheritance (Super Keyword Object Class Package-Private vs Protected)(480P)"}, {"id": "1HQAd7GzM9nCCKUutVJEA2CyBcPTEdvoL", "title": "041 [JAVA] - Polymorphism (Method Overloading and Method Overriding)(480P)"}, {"id": "1YhHanj05AC2IuTQm2DD42zCmZyAXIvZ1", "title": "042 [JAVA] - Polymorphism(Explanation of Examples Static Methods)(480P)"}, {"id": "16HKE7-O5-e1yskQXo-3xbtR26Ak-2DAI", "title": "043 [JAVA] - Polymorphism(Late binding Dynamic Polymorphism Early binding Static Polymorphism )(480P)"}, {"id": "1ON2eDYzOPZIvbpooJmFx83dKvtE72CKo", "title": "044 [JAVA] - Types of Relationships (Association Aggregation has-a Composition part-of )(480P)"}, {"id": "18LV4vWCV-LcNcaEwj4AxLe_aSSrAYfJz", "title": "045 [JAVA] - Types of Relationships (Association Aggregation Composition) With Example(480P)"}, {"id": "1GpJWZQhr9obiQhILa962kJtgeKrnmXN6", "title": "046 [JAVA] - Final Keyword (Final Variable Final Blank Variable Static Final Blank Variable)(480P)"}, {"id": "1XAIioDuUQvYksIqNDotoWXcGcgzLmddx", "title": "047 [JAVA] - Final Keyword (Final Parameters Final Methods Final Classes Final References)(480P)"}, {"id": "1b1K0X4BzeqnrNlsAd6OmsCyWY25fuUal", "title": "048 [JAVA] - ArrayList Class(480P)"}, {"id": "1UmbSKywc55rt3v2RS0uzwRPyNb9Z2SPG", "title": "049 [JAVA] - ArrayList Declaration Print Methods(Add Get AddAll Copy Constructor Clone)(480P)"}, {"id": "1l3aXkfF92K3GTZUMTRby3GuUhbjVR3xE", "title": "05 [JAVA] - Arithmetic Operators (Prefix Postfix)(480P)"}, {"id": "18j8ecZAiBvGjWU55WCtJOV1Dq4gmMjc2", "title": "050 [JAVA] - ArrayList Methods(Set Remove Remove All Remove Range) Polymorphic ArrayList(480P)"}, {"id": "1uu6UofX28Ar1hF4CnFUN-WVBdrjZCArj", "title": "051 [JAVA] - ArrayList Methods(contains retainAll subList clear ensureCapacity sort min max)(480P)"}, {"id": "1JPbxP3-2WKyCHJzRdutbBGjasZk1UCb0", "title": "052 [JAVA] - Abstraction (Real-Life Examples Introduction to Abstract Class UML Abstract Class)(480P)"}, {"id": "1URygWXlv7RkDw2kWq6adctRBBONatGiM", "title": "053 [JAVA] - Abstract Class part 1 (Examples Abstract rules)(480P)"}, {"id": "1D_-7GbsAVO0sUhKVAOes3d1yGxMC8yfp", "title": "054 [JAVA] - Abstract Class part 2 (Polymorphism Benefits of Abstract Class)(480P)"}, {"id": "1u8Nh7AT4S8s9uBoRVQlFgrzOhIe0391a", "title": "055 [JAVA] - Interface Part1 (Real-Life Example UML Convention)(480P)"}, {"id": "1x-yeilE7w10SrmVaTYgarDsCYCTcUzHv", "title": "056 [JAVA] - Interface Part2(Practical Implement Multiple Interfaces Extends Multiple Interfaces)(480P)"}, {"id": "1dhYU-Lf7R2e7d6XMgtIJWCoUuwc-6u0F", "title": "057 [JAVA] - Interface Part3 (Default - Private - Static Methods Nested Interface)(480P)"}, {"id": "15ijxw1MkKXoIfPj26cmMqiqtx8efLB_6", "title": "058 [JAVA] - Interface Part4(Marker or Tagging Interface Generic Interface Benefits of Interface)(480P)"}, {"id": "1vBhjqez0_ksXP6knez_fGnWu4BsEPAD7", "title": "059 [JAVA] - Anonymous Inner Class (Extends Class Implements Interface Defined Arguments Lambda)(480P)"}, {"id": "148xB5gEzifFra9Wvpn0vQllxgnShMWh0", "title": "06 [JAVA] - Java User Input (Scanner) Printf methods(480P)"}, {"id": "15Mmj4N5UETjuoKYVsvYAjRlilHiQHj0f", "title": "060 [JAVA] - Anonymous Inner Class (Constructor Extra Methods Local Variables Var Keyword)(480P)"}, {"id": "1w7MXahGjHT0pdIwrQ5JX1XRfdsKWcrXP", "title": "061 [JAVA] - Java Enum (What is Enum Examples UML Enum with switch Attributes Methods)(480P)"}, {"id": "1WcsXyBN5K0tzSvJSHblCmSxsSXLHM6dV", "title": "062 [JAVA] - Java Enum ( Real life example ordinal compreTo toString name valueOf values )(480P)"}, {"id": "1NGdYG4Fu_f9RI909-UvAMmaBKRBb3VFj", "title": "063 [JAVA] - Java Enum ( EnumSet EnumMap classes Benefits of Enums Enums vs Classes )(480P)"}, {"id": "17K8w4XsoE1TwU9wtegsrki-VpEmFLjeo", "title": "064 [JAVA] - Exception Handling (Try-catch block Multi-catch blocks Union-catch blocks )(480P)"}, {"id": "1HnEqs2bbOtp0SRAUOwoUhDLhPyYz90sr", "title": "065 [JAVA] - Exception Handling ( Finally Block Throws Keyword Checked vs Unchecked Exception )(480P)"}, {"id": "1ERuiQT-DA1r9BrtJXtJOSdvV0Z1WneBG", "title": "066 [JAVA] - Exception Handling (Throw keyword Throw vs Throws Throw finally Custom exception)(480P)"}, {"id": "1Dq9-k0ipbgj2lGDLpoIkVqzDidjIS7yK", "title": "067 [JAVA] - File Handling(java.io Byte Character stream InputStream OutputStream subclasses)(480P)"}, {"id": "1dn0BNztbpgCQxYkHQORDhJFPFDazIebc", "title": "068 [JAVA] - File Handling ( FileInputStream class Character size vs String size )(480P)"}, {"id": "1Y4Fx4pEixBCqjZ2_C-9JGT2uU6uLQOys", "title": "069 [JAVA] - File Handling (FileOutputStream class Reading and Writing images Arabic letters)(480P)"}, {"id": "1AtI_H3fu-rRVMIQHKT9CH-_cyYEBrBHg", "title": "07 [JAVA] - Selection Statement ( if - if else - if else if )(480P)"}, {"id": "1-KgtNjYkjS_-QnL_HI9kxcNRIp6Q2C_f", "title": "070 [JAVA] - File Handling (File class)(480P)"}, {"id": "1MpbTnQXyVMcMN6c6Y1lZUf0dAEdS9FSS", "title": "071 [JAVA] - File Handling (File class Directories Add Remove Constructors)(480P)"}, {"id": "1CibWmaZgjaOi95WqcZI7M8DnrKWUXOXf", "title": "072 [JAVA] - File Handling (Reader class Writer class hierarchy FileWriter FileReader)(480P)"}, {"id": "1oGV5mbedHAz_tEKX7gt2D1Hpb1FA9tGq", "title": "073 [JAVA] - File Handling (BufferedReader BufferedWriter classes Read file line by line)(480P)"}, {"id": "114Fu8ypxjIDyQNqs5e8bhQ0VP_7_8ljC", "title": "074 [JAVA] - File Handling (PrintWriter class Constructors Methods )(480P)"}, {"id": "1PD1jxa2aVljWwqKXF2dYCN8gybEx28O9", "title": "075 [JAVA] - File Handling (Scanner class Constructors Methods useDelimiter delimiter)(480P)"}, {"id": "1hGAY-uZh310-PaBcNJqAFFa6MGO-fPYd", "title": "076 [JAVA] - File Handling (Serialization and Deserialization Read Write multiple objects)(480P)"}, {"id": "1rj1SX71eC2mtcjrOVUpKRqKR842AYR7P", "title": "08 [JAVA] - Selection Statement ( Exercises Practice Ternary Operator ) Instanceof Method(480P)"}, {"id": "1iIi47G-e3RCJPJFkDyEVOa1nRRYL_JPv", "title": "09 [JAVA] - Selection Statement (Switch Statements)(480P)"}], "pdfs": [{"id": "1WJhvCa4olwNp4d-7LAoWHuWDcHIi343P", "title": "01- Introduction (1)"}, {"id": "1RXZ8LTn2Dcok4mOVq5k7kNtf3szahUKJ", "title": "02 - Elementary Programming (1)"}, {"id": "1ZDXb6WSVO80P0kfyhnq8zA02V4Clqw0j", "title": "03 - Selections"}, {"id": "1YNWHCU7BmR6mVy-M0G_mQMB0a8EKSIqV", "title": "04 - Mathematical Functions, Characters, and Strings"}, {"id": "1K-kevW0OGoP6PK0pdM-TYXm90DknamyW", "title": "05 - Loops"}, {"id": "1YjCTq_84RrnyJBE8oNnMLIojhhTynaDW", "title": "06 - Methods"}, {"id": "1Bl5tNqEUd070jE_CU-aMhgNtcmSycYc4", "title": "07-Arrays (1D)"}, {"id": "1iSpQ4VnhUn7FdeCPX12VPQkI3EhJasZI", "title": "10. Selected Topics"}, {"id": "1Y_rHb9iOZgTQv_f-aqClBv4ZCIun7IFU", "title": "11. Inheritance and Polymorphism"}, {"id": "1hYnsGzPGaGEEmriC22JFgxBhl7UoLcOD", "title": "9. Objects and Classes"}, {"id": "1uJDcp35EeraenZF82W-0eyIMSO4nH97J", "title": "DOC-20260811-WA0007"}, {"id": "1N3QphB3yEkSInha7j42llqcSq68Bf5QH", "title": "DOC-20260811-WA0008"}, {"id": "1HYgWTF4R1IH2lzyYMHlhCPI_6Oxs_xWi", "title": "Lab Assignment1-1"}, {"id": "1j0s0wYBWBqsUAJbO1ga6f3DE3OFyBAXg", "title": "Lab5 Inheritance (1)-1"}, {"id": "1NlVCtxr8HikjoKGxW6hxbeix4iLXlRcj", "title": "OOP-Lec14 - Abstract Classes"}]}, "operating ystem": {"title": "نظم التشغيل", "icon": "⚙️", "videos": [{"id": "1vQRIo2HGiUhtugxiZqUSydcf2NVodwCu", "title": "01–Operating Systems Ch1-1 Introduction نظم التشغيل مقدمة أهداف الكورس(480P)"}, {"id": "147w_iTiv9UmjZbPY1DMXv09wqiM3zLmC", "title": "02 Operating Systems Ch1-2 OS Components 720P"}, {"id": "1Hlq63GJgjn5bp-ThLE2m0LlSyQiiuhun", "title": "03 Operating Systems Ch1-3 Computer-System Architecture 1080P"}, {"id": "1UHR6TiEMNpCyREEYXJjmp0XGsKzJGvRe", "title": "04 Operating Systems Ch1-4 Storage Structure 720P"}, {"id": "1Z52lkAiBFLZLS5ElHIC8YMCh7K6goltb", "title": "05 Operating Systems Ch2-1 OS Services 720P"}, {"id": "1aHpmQvlFxDhMNL8G56FBv7AwkXA-2Jkd", "title": "06 Operating Systems Ch3-1 Processes 1080P"}, {"id": "1VjW9DUe-uRS0Z0gAQHconc_5ecDy9f3c", "title": "07 Operating Systems Ch3-2 Process Scheduling 1080P"}, {"id": "1r_d1XmFJEHvWtC7wgVuCLEvwFLj4P1qE", "title": "08 Operating Systems Ch4-1 Threads 1080P"}, {"id": "14o0Xz7Ycfe-bNdC0Qo0FmZjWDgVe5lI_", "title": "09 Operating Systems Ch5-1 CPU Scheduling P1 1 480P"}, {"id": "1V60-VVuC_GxkmHMmSny32gB3S5wxcqZB", "title": "10 Operating Systems Ch5-2 CPU Scheduling P2 2 480P"}, {"id": "1odR5KlNfAiBM1krzHGFvJxeSUzZxUzdY", "title": "11 Operating Systems Ch5-3 CPU Scheduling P3 3 480p"}, {"id": "1v2b3o4YlUEtt46ZPazMSBdE-f4wB0gQN", "title": "12 Operating Systems Ch5-4 Multilevel Scheduling P1 1 480P"}, {"id": "1OMuM1bLf7bwDSswOvF6hP0ywSfkIdc9Q", "title": "13 Operating Systems Ch5-5 Multilevel Scheduling P2 2 480P"}, {"id": "1AL8mGGhaXTuS6vdaSyzWqxlxHoZniegI", "title": "14 Operating Systems Ch6-1 Process Synchronization 1080P"}, {"id": "1vnkaZRbyOhvYpEu369xD-66wyXm0Vflq", "title": "15 Operating Systems Ch6-2 Critical Section Problem 1080P"}, {"id": "17EFSOCipSjzeOzDre8lYUnPDyidfgZTX", "title": "16 Operating Systems Ch6-3 Solutions to CS Problem 1080P"}, {"id": "1TNnwN0_dXyZAjUyy3Yd_Kd9Sof1K8tsZ", "title": "17 Operating Systems Ch7-1 Deadlocks 480P"}, {"id": "1AJB3ytyhb1W8KIT1AQHY29uVoBEbRfr3", "title": "18 Operating Systems Ch7-2 Deadlock Handling 480P"}, {"id": "1udL0u4IKy5_Dsbf7dMjeEMPczxyhSeWp", "title": "19 Operating Systems Ch7-3 Deadlock Avoidance 480P"}, {"id": "1a3lh9YQwfWkC79nxk0sBeARXJclEB_CV", "title": "20 Operating Systems Ch7-4 Banker s Algorithm 480P"}, {"id": "1vTtCwg5qOGzoQzMaDyj5zEZSLwn8PaQT", "title": "21 Operating Systems Ch7-5 Deadlocks Detection 1080P"}], "pdfs": [{"id": "16TIKrlDBsmQKegpPiz0OCM8htSGSMIYa", "title": "LINUX COMMANDS REFERENCE-2"}, {"id": "1IgbRtA7FHwsJF_KwXBjeb0uzlgYk3ihA", "title": "ch1-1"}, {"id": "137gar4ppbyHzJkj9z3E-irLqbvFUqFuO", "title": "ch2-1"}, {"id": "18Tpa6nZzpJf9V9CDGWjl5xdfTRyRswnZ", "title": "ch3"}, {"id": "1LH5nLtXX6Y5uvMs88G4Sy6Ewc0vCuVf9", "title": "ch4"}, {"id": "175HFMqSuKAGYvA7beBevW2ivjN2nd-06", "title": "ch5"}, {"id": "1AvGf7ImCopxoVWvTN2LsAdYEgWLtVr80", "title": "ch6"}, {"id": "1jHjhNTpLKRmtbGNpj9qbz2IKGe68JgSY", "title": "ch7"}, {"id": "1-iDo7fZ465y0KEfwtsbHVpWiulZRa3YS", "title": "ch8"}]}, "propapility and statcis": {"title": "الاحتمالات والإحصاء", "icon": "📊", "videos": [{"id": "1K-u0iJqPjOXbKDueiXXltcdB7y9K4Jhj", "title": "04- Probability and Statistics Bayes Rule RV احتمالات وإحصاء قاعدة بايز والمتغيرات العشوائية(480P)"}, {"id": "1FPe20472Mh18oWg5rLNp2syjULTwXFD0", "title": "05- Probability and Statistics Revision Lec 1-4 احتمالات وإحصاء ملخص محاضرات سابقة(480P)"}, {"id": "1BRzd2ZERPls1Ub9m5qqBWqpu-F_B-xdM", "title": "06- Probability and Statistics Mean-Variance Cont. R.V. احتمالات وإحصاء المتوسط والتباين(480P)"}, {"id": "1aX5lP_QJlrUMrmR8hCTq0dsqXEKUQ5iZ", "title": "07- Probability and Statistics Cont. R.V. Joint P. D. احتمالات وإحصاء أكثر من متغير عشوائي(480P)"}, {"id": "1aeKmyaCbwytnYw_4Teiv34jwV3zXkgAe", "title": "08- Probability and Statistics Conditional Mean and Var. احتمالات وإحصاء الوسط والتباين الشرطي(480P)"}, {"id": "1ZzM3SCJkaK6KoWAhG2Y-jmY6ui-4sZl3", "title": "09- Probability and Statistics Independence احتمالات وإحصاء الاستقلالية بين المتغيرات(480P)"}, {"id": "1cs9mWby7Op9gkzdWAEL1hri0KGyGNZOG", "title": "10- Probability and Statistics Revision Lec 5-8 احتمالات وإحصاء ملخص محاضرات سابقة(480P)"}, {"id": "1nzPW5c_wt5ZIIKmOVmRDlkWuR2LMrUsE", "title": "11- Probability and Statistics Probability Distribution احتمالات وإحصاء بعض التوزيعات الاحتمالية(480P)"}, {"id": "1HcAlTMykY5T9cjzVf703-qp6iql-5mD9", "title": "12- Probability and Statistics Discrete Distributions احتمالات وإحصاء توزيعات احتمالية منفصلة(480P)"}, {"id": "12LnNMZP9F0vB6e6vV9DOyXaKCWkxd9We", "title": "13- Probability and Statistics Continuous Distributions احتمالات وإحصاء توزيعات احتمالية متصلة(480P)"}, {"id": "1jPD5C7knNvjpYVM-cjWyvMT4brVzg1lG", "title": "14- Probability and Statistics Descriptive Statistics P1 احتمالات وإحصاء الإحصاء الوصفي ج1(480P)"}], "pdfs": [{"id": "1wJtJhhmhkCfKhlUstrft7I38DCDUmHIF", "title": "Continu lec 22"}, {"id": "1cf9W4aMI7DSyF4lND0LcVSpuI280rA3P", "title": "Exercises-1"}, {"id": "1duHKLiAJdHvFV48qHyWRAFBGsv3m9OJU", "title": "Lec7"}, {"id": "1RMgviWDeJM204XU--yGehNsvPMwg1bDI", "title": "Lect 666"}, {"id": "1wkmjC-qZmBJGu5q-Sq67BcNHO8o9cHEn", "title": "Lectures 1"}, {"id": "1cLoPoV4p3werYBG_Tuh0Z9uCLB20NKSL", "title": "Lectures 1 1"}, {"id": "1txgB28gAgvD219an6TgiBrSGPqwokxE-", "title": "Probability and Statistics-Lec02"}, {"id": "19nQ_zZ8GRaXSdSRWjvFypqmDGkCLpnm4", "title": "Probability and Statistics-Lec12"}, {"id": "1TRPbag9iIFh6rGq0vfDf5wn0MeRW3i0X", "title": "Sheet 6-1"}, {"id": "12JB7M4mSARrnm-qHHSAGzm_lvZxmsMgG", "title": "Tests of Hypotheses lec 8-1"}, {"id": "1l5dENWNcpjSJKWKbyO9VAgJ4JzQ_IPKS", "title": "lec 2 ics-1"}, {"id": "1StfIyi0gLGyx-iU2RjRPwonOkjRReOgO", "title": "lec 2 ics-2"}, {"id": "1h6ic01nGO748eaC0i-OsxEAGa-VqUGsq", "title": "lec333-1"}, {"id": "1FTXiKlQ8FdGVp-MYybcA_n1RIVz3AjWh", "title": "lect 4-1"}, {"id": "1Fa2h1d82U_q4cb4bhN1SuUvPw5vsri5P", "title": "lect 555"}, {"id": "1FWltVwf8M4VEpLkRAoqavNRno6qlGl3f", "title": "sheet 4"}, {"id": "1vuWtLeTa_1Iiw4FOPaB2em3k35SrObA2", "title": "sheet2"}, {"id": "1m5_RgtXvViTjGcaUGPxQYjsO-h_35YKb", "title": "sheet3"}, {"id": "1ffpLW005X61e8on4I7sPgwYowbJRTzCZ", "title": "sheetb8-1"}]}, "رياده اعمال.pdf": {"title": "ريادة الأعمال", "icon": "💼", "videos": [], "pdfs": [{"id": "1euqwBhEVjyF9vFzjYlHHkTUD-iK2okfm", "title": "المحاضرة (الثانية)"}, {"id": "1Ur6YVgD-erF8mgmljOOEkxhqVEF7zZP8", "title": "المحاضرة الأولى (2)"}, {"id": "1aYkleN_DVXsc1R7fQ7Jsozrrrz4e_GdX", "title": "بنك أسئلة ريادة الأعمال"}, {"id": "1KGxQzDr93GF4YIO3Q4j4BO4HSwMMiTke", "title": "ريادة الأعمال-أسئلة المحاضرة 1 (1)"}, {"id": "14I9XQZk6RqP7n3HMSyS1zkTF3LoNyZxl", "title": "ريادة الأعمال-أسئلة المحاضرة 1"}, {"id": "15Gr7wPjLGZSz0akChX2CCJiJ4_ERpuLU", "title": "ريادة الأعمال-المحاضرة 1 (1)"}, {"id": "1nrqNQvaLw2qXzxzxgmn-IrgHNkyPS2kH", "title": "ريادة الأعمال-المحاضرة 1"}, {"id": "1eO1uk4EAfZHE0b43LkogYE-P0eimph-s", "title": "ريادة الأعمال-المحاضرة 2"}, {"id": "16yI1yIzKKFr5CHkZtojUSTxA0NgMWbLl", "title": "ريادة الأعمال-المحاضرة 3"}, {"id": "154A-zfGPnQiWQsBo5838vBPkkm6aIJ1E", "title": "ريادة الأعمال-المحاضرة 5"}]}, "عقيدة وأخلاق": {"title": "عقيدة وأخلاق", "icon": "🕌", "videos": [], "pdfs": [{"id": "1Z857DXUK9LuVfARPpywzibxJY2IjUbBL", "title": "كتاب العقيدة 126والأخلاق"}]}}}, "tests": {"title": "الامتحانات", "icon": "📝", "subjects": {"امتحانات": {"title": "ملفات الامتحانات", "icon": "📝", "videos": [], "pdfs": [{"id": "187JVQlbRpuF_3vm5Mguq-EtJzuvaaVmC", "title": "English 1"}, {"id": "1lL6ND0wCF5O8DjAty1vMBab6BAFN5ck9", "title": "Physics"}, {"id": "1JtYNwBnacAHJNsnV9cdNnhrkvFrLs_zV", "title": "Quran"}, {"id": "1bFutzYMC3QH8vt5eMmqTUyzUU8PwASH7", "title": "caclus"}, {"id": "18Fy6gGe-kPpL5Tytoz7nEmB0F0ozRp6u", "title": "computing fundamental"}, {"id": "1NzlyCRhL7acBtIeIdygxMLZqbPvhp92M", "title": "discrete math"}, {"id": "1BC_ldsiBWI9UrVMBUsFwHIqNu3Hsd9n7", "title": "internet technology"}, {"id": "1JkCD8mDBhzSAy7PIh-p1FxUJn2QKDbPA", "title": "objectied oranited programming"}, {"id": "1Zv-MApDAuAKULpKuWsjoH3_PzHpkhSPq", "title": "operating system"}, {"id": "1VTmYbLHoQNA5t0EMUqPbCgBsQwZF-epy", "title": "probability and statistics (midterm)"}, {"id": "1MQ61UFVSJig9iRmVqL-C38e40PKE3Gq9", "title": "probability and statistics"}, {"id": "14NjmsvbiXsptEYjptOSKEAYxEOUOHio_", "title": "structure programming (ciber security)"}, {"id": "1Ms3H3665wUr5cdBP-ATulp9EukL3J0Uq", "title": "structure programming"}, {"id": "1E4Ixlxt_ktAKjokntU27FNDMCcm8dHkV", "title": "الفقه الإسلامي"}, {"id": "1tviavz7e0s4_Z6NqPH88EE6l8SOCCFLu", "title": "رياده اعمال"}]}}}};
+
+let currentSem = null, currentSubj = null, currentTab = "videos";
+let zoomLevel = 1, rotation = 0;
+
+function getDlUrl(id) {
+  return "https://drive.google.com/uc?export=download&id=" + id + "&confirm=t";
+}
+function getViewUrl(id) {
+  return "https://drive.google.com/file/d/" + id + "/view";
+}
+function doDownload(id, title) {
+  var url = getDlUrl(id);
+  var a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ try { a.remove(); } catch(e){} }, 150);
+}
+function getPreviewUrl(id) { return "https://drive.google.com/file/d/" + id + "/preview"; }
+
+function buildSidebar() {
+  const side = document.getElementById("sidebar");
+  side.innerHTML = "";
+  ["sem1","sem2","tests"].forEach(semId => {
+    if (!DATA[semId]) return;
+    const sem = DATA[semId];
+    const group = document.createElement("div");
+    group.className = "sem-group";
+    group.innerHTML = `<div class="sem-title">${sem.icon} ${sem.title}</div>`;
+    Object.keys(sem.subjects).forEach(subjKey => {
+      const subj = sem.subjects[subjKey];
+      const btn = document.createElement("button");
+      btn.className = "subj-btn";
+      btn.dataset.sem = semId; btn.dataset.subj = subjKey;
+      const v = subj.videos.length, p = subj.pdfs.length;
+      btn.innerHTML = `<span>${subj.icon}</span><span>${subj.title}</span>
+        <span class="counts">${v?`<span class="badge-v">${v}</span>`:''}${p?`<span class="badge-p">${p}</span>`:''}</span>`;
+      btn.onclick = () => selectSubject(semId, subjKey);
+      group.appendChild(btn);
+    });
+    side.appendChild(group);
+  });
+}
+
+function selectSubject(semId, subjKey) {
+  currentSem = semId; currentSubj = subjKey; currentTab = "videos";
+  document.getElementById("searchInput").value = "";
+  document.querySelectorAll(".subj-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.sem === semId && b.dataset.subj === subjKey);
+  });
+  document.querySelectorAll(".tab-btn").forEach(t => t.classList.toggle("active", t.dataset.tab === "videos"));
+  renderContent();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  renderContent();
+}
+
+function renderContent(filter) {
+  filter = (filter || "").toLowerCase();
+  const grid = document.getElementById("itemsGrid");
+  grid.innerHTML = "";
+  if (!currentSem || !currentSubj) {
+    grid.innerHTML = '<div class="empty"><span>📚</span>اختر مادة من القائمة الجانبية</div>';
+    return;
+  }
+  const subj = DATA[currentSem].subjects[currentSubj];
+  document.getElementById("subjIcon").textContent = subj.icon;
+  document.getElementById("subjTitle").textContent = subj.title;
+  document.getElementById("subjMeta").textContent = subj.videos.length + " فيديو  •  " + subj.pdfs.length + " PDF";
+
+  const items = currentTab === "videos" ? subj.videos : subj.pdfs;
+  const filtered = items.filter(v => v.title.toLowerCase().includes(filter));
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty"><span>🔍</span>لا توجد نتائج مطابقة</div>';
+    return;
+  }
+  filtered.forEach((item, idx) => {
+    const card = document.createElement("div");
+    card.className = "item-card";
+    const isVideo = currentTab === "videos";
+    card.innerHTML = `
+      <div class="item-num">${isVideo ? "فيديو" : "ملف"} ${idx+1}</div>
+      <div class="item-title">${item.title}</div>
+      <div class="item-actions">
+        <button class="btn ${isVideo ? "btn-watch" : "btn-pdf"}" onclick="openViewer('${item.id}', '${esc(item.title)}', ${isVideo})">
+          ${isVideo ? "▶️ مشاهدة" : "📄 عرض"}
+        </button>
+        <button class="btn btn-dl" onclick="doDownload('${item.id}')">⬇️ تحميل</button>
+      </div>`;
+    card.querySelector(".item-title").onclick = () => openViewer(item.id, item.title, isVideo);
+    grid.appendChild(card);
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+function filterItems() { renderContent(document.getElementById("searchInput").value); }
+
+function openViewer(id, title, isVideo) {
+  zoomLevel = 1;
+  rotation = 0;
+  applyTransform();
+  document.getElementById("viewerTitle").textContent = title;
+  document.getElementById("viewerFrame").src = getPreviewUrl(id);
+  document.getElementById("viewerDl").onclick = function(e){ e.preventDefault(); doDownload(id); };
+  document.getElementById("viewer").classList.add("open");
+  document.body.classList.add("viewer-open");
+  showHint();
+}
+
+function closeViewer() {
+  document.getElementById("viewer").classList.remove("open");
+  document.body.classList.remove("viewer-open");
+  document.getElementById("viewerFrame").src = "";
+  zoomLevel = 1; rotation = 0;
+  if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+
+function applyTransform() {
+  const el = document.getElementById("viewerContent");
+  el.style.transform = `scale(${zoomLevel}) rotate(${rotation}deg)`;
+  document.getElementById("zoomLabel").textContent = Math.round(zoomLevel * 100) + "%";
+  el.classList.remove("rotated-90","rotated-180","rotated-270");
+  const r = ((rotation % 360) + 360) % 360;
+  if (r === 90) el.classList.add("rotated-90");
+  else if (r === 180) el.classList.add("rotated-180");
+  else if (r === 270) el.classList.add("rotated-270");
+}
+
+function zoomIn() {
+  zoomLevel = Math.min(zoomLevel + 0.25, 4);
+  applyTransform();
+}
+function zoomOut() {
+  zoomLevel = Math.max(zoomLevel - 0.25, 0.5);
+  applyTransform();
+}
+function zoomReset() {
+  zoomLevel = 1;
+  applyTransform();
+}
+
+function rotateScreen() {
+  rotation = (rotation + 90) % 360;
+  applyTransform();
+}
+
+function toggleFullscreen() {
+  const stage = document.getElementById("viewer");
+  if (!document.fullscreenElement) {
+    stage.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+
+function showHint() {
+  const h = document.getElementById("viewerHint");
+  h.classList.add("show");
+  setTimeout(() => h.classList.remove("show"), 3000);
+}
+
+buildSidebar();
+const firstSem = "sem1";
+if (DATA[firstSem]) {
+  const firstSubj = Object.keys(DATA[firstSem].subjects)[0];
+  if (firstSubj) selectSubject(firstSem, firstSubj);
+}
+</script>
+</body>
+</html>
